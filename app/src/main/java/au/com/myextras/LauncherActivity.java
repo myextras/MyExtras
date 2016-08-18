@@ -37,7 +37,7 @@ public class LauncherActivity extends AppCompatActivity implements View.OnClickL
         editText.setOnEditorActionListener(new TextView.OnEditorActionListener() {
             @Override
             public boolean onEditorAction(TextView view, int actionId, KeyEvent event) {
-                if (actionId == EditorInfo.IME_ACTION_GO) {
+                if (actionId == EditorInfo.IME_ACTION_DONE) {
                     Preferences.setSchoolCode(view.getContext(), view.getText().toString());
 
                     startMainActivity();
