@@ -1,5 +1,6 @@
 package au.com.myextras;
 
+import android.content.Intent;
 import android.graphics.Rect;
 import android.graphics.Typeface;
 import android.os.Bundle;
@@ -16,7 +17,7 @@ import android.widget.TextView;
 import java.util.Calendar;
 import java.util.Date;
 
-public class MainActivity extends AppCompatActivity {
+public class BulletinsActivity extends AppCompatActivity {
 
     private RecyclerView recyclerView;
 
@@ -24,7 +25,7 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        setContentView(R.layout.main_activity);
+        setContentView(R.layout.bulletins_activity);
 
         recyclerView = (RecyclerView) findViewById(R.id.bulletins);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
@@ -52,11 +53,13 @@ public class MainActivity extends AppCompatActivity {
                 actionButton.setVisibility(View.GONE);
             }
         });
+
+        startService(new Intent(this, SyncService.class));
     }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        getMenuInflater().inflate(R.menu.main_activity, menu);
+        getMenuInflater().inflate(R.menu.bulletins_activity, menu);
 
         return true;
     }
