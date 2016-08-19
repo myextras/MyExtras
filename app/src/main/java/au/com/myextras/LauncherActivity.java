@@ -13,7 +13,7 @@ import android.widget.EditText;
 import android.widget.TextView;
 
 /**
- * Shows splash screen and asks for the school code if missing.
+ * Shows splash screen and initial configuration.
  */
 public class LauncherActivity extends AppCompatActivity implements View.OnClickListener {
 
@@ -23,6 +23,7 @@ public class LauncherActivity extends AppCompatActivity implements View.OnClickL
     private static boolean firstLaunch = true;
 
     private View configurationView;
+    private EditText codeEditText;
     private View doneButton;
 
     @Override
@@ -33,12 +34,12 @@ public class LauncherActivity extends AppCompatActivity implements View.OnClickL
 
         configurationView = findViewById(R.id.configuration);
 
-        EditText editText = (EditText) findViewById(R.id.code);
-        editText.setOnEditorActionListener(new TextView.OnEditorActionListener() {
+        codeEditText = (EditText) findViewById(R.id.code);
+        codeEditText.setOnEditorActionListener(new TextView.OnEditorActionListener() {
             @Override
             public boolean onEditorAction(TextView view, int actionId, KeyEvent event) {
                 if (actionId == EditorInfo.IME_ACTION_DONE) {
-                    Preferences.setSchoolCode(view.getContext(), view.getText().toString());
+                    Preferences.setCode(view.getContext(), view.getText().toString());
 
                     startMainActivity();
                 }
@@ -63,7 +64,7 @@ public class LauncherActivity extends AppCompatActivity implements View.OnClickL
     private void onSplashTimeout() {
         firstLaunch = false;
 
-        if (Preferences.getSchoolCode(this) == null) {
+        if (Preferences.getCode(this) == null) {
             configurationView.setVisibility(View.VISIBLE);
         } else {
             startMainActivity();
@@ -73,6 +74,8 @@ public class LauncherActivity extends AppCompatActivity implements View.OnClickL
     @Override
     public void onClick(View view) {
         if (view == doneButton) {
+            Preferences.setCode(view.getContext(), codeEditText.getText().toString());
+
             startMainActivity();
         }
     }

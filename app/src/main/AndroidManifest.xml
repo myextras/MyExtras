@@ -10,6 +10,11 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
 
+        <provider
+            android:name=".BulletinsProvider"
+            android:authorities="${applicationId}.bulletins"
+            android:exported="false" />
+
         <activity
             android:name=".LauncherActivity"
             android:theme="@style/LauncherTheme">
