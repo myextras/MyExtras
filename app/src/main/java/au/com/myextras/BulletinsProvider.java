@@ -1,9 +1,14 @@
 package au.com.myextras;
 
+import android.app.Notification;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.content.ContentProvider;
 import android.content.ContentResolver;
+import android.content.ContentUris;
 import android.content.ContentValues;
 import android.content.Context;
+import android.content.Intent;
 import android.content.UriMatcher;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteConstraintException;
@@ -13,6 +18,9 @@ import android.database.sqlite.SQLiteStatement;
 import android.net.Uri;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.annotation.WorkerThread;
+import android.support.v4.content.res.ResourcesCompat;
+import android.support.v7.app.NotificationCompat;
 
 import com.tughi.android.database.sqlite.DatabaseOpenHelper;
 
@@ -111,6 +119,8 @@ public class BulletinsProvider extends ContentProvider {
             database.update(TABLE_BULLETINS, values, selection, selectionArgs);
         }
 
+        updateNotification(database);
+
         return null;
     }
 
@@ -139,6 +149,8 @@ public class BulletinsProvider extends ContentProvider {
             contentResolver.notifyChange(Bulletin.CONTENT_URI, null);
         }
 
+        updateNotification(database);
+
         return affectedRows;
     }
 
@@ -146,5 +158,51 @@ public class BulletinsProvider extends ContentProvider {
     public int delete(@NonNull Uri uri, String selection, String[] selectionArgs) {
         throw new UnsupportedOperationException("Unsupported URI: " + uri);
     }
+
+    private static final String[] NOTIFICATION_BULLETIN_PROJECTION = {
+            Bulletin.Column.ID,
+            Bulletin.Column.TITLE,
+            Bulletin.Column.PUBLISHED,
+            Bulletin.Column.ACCESSED,
+    };
+    private static final String NOTIFICATION_BULLETIN_SORT_ORDER = Bulletin.Column.PUBLISHED + " DESC";
+    private static final int NOTIFICATION_BULLETIN_ID = 0;
+    private static final int NOTIFICATION_BULLETIN_TITLE = 1;
+    private static final int NOTIFICATION_BULLETIN_PUBLISHED = 2;
+    private static final int NOTIFICATION_BULLETIN_ACCESSED = 3;
+
+    @WorkerThread
+    public void updateNotification(SQLiteDatabase database) {
+        Cursor cursor = database.query(TABLE_BULLETINS, NOTIFICATION_BULLETIN_PROJECTION, null, null, null, null, NOTIFICATION_BULLETIN_SORT_ORDER);
+
+        if (cursor != null) {
+            NotificationManager notificationManager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
+
+            if (cursor.moveToFirst() && cursor.getLong(NOTIFICATION_BULLETIN_PUBLISHED) != cursor.getLong(NOTIFICATION_BULLETIN_ACCESSED)) {
+                Uri uri = ContentUris.withAppendedId(Bulletin.CONTENT_URI, cursor.getLong(NOTIFICATION_BULLETIN_ID));
+
+                Intent intent = new Intent(context, BulletinsActivity.class);
+                intent.setData(uri);
+                PendingIntent pendingIntent = PendingIntent.getActivity(context, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
+
+                Notification notification = new NotificationCompat.Builder(context)
+                        .setSmallIcon(R.drawable.ic_stat_notify)
+                        .setContentTitle(Preferences.getTitle(context))
+                        .setContentText(cursor.getString(NOTIFICATION_BULLETIN_TITLE))
+                        .setContentIntent(pendingIntent)
+                        .setColor(ResourcesCompat.getColor(context.getResources(), R.color.branding_blue, null))
+                        .setAutoCancel(true)
+                        .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
+                        .build();
+
+                notificationManager.notify(R.id.notification, notification);
+            } else {
+                notificationManager.cancel(R.id.notification);
+            }
+
+            cursor.close();
+        }
+    }
+
 
 }
