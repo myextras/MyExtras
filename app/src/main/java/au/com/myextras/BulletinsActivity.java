@@ -1,10 +1,12 @@
 package au.com.myextras;
 
+import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
 import android.graphics.Rect;
 import android.graphics.Typeface;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.LoaderManager;
@@ -23,21 +25,29 @@ import android.widget.TextView;
 public class BulletinsActivity extends AppCompatActivity implements LoaderManager.LoaderCallbacks<Cursor> {
 
     private static final int LOADER_BULLETINS = 1;
+    private static final int LOADER_NEW_BULLETINS = 2;
 
-    private static final String[] BULLETINS_PROJECTION = {
+    private static final String[] BULLETIN_PROJECTION = {
             Bulletin.Column.ID,
             Bulletin.Column.TITLE,
             Bulletin.Column.PUBLISHED,
             Bulletin.Column.ACCESSED,
     };
-    private static final String BULLETINS_SELECTION = Bulletin.Column.CODE + " = ?";
-    private static final String BULLETINS_SORT_ORDER = Bulletin.Column.PUBLISHED + " DESC";
+    private static final String BULLETIN_SELECTION = Bulletin.Column.CODE + " = ?";
+    private static final String BULLETIN_SORT_ORDER = Bulletin.Column.PUBLISHED + " DESC";
     private static final int BULLETIN_ID = 0;
     private static final int BULLETIN_TITLE = 1;
     private static final int BULLETIN_PUBLISHED = 2;
     private static final int BULLETIN_ACCESSED = 3;
 
+    private static final String[] NEW_BULLETIN_PROJECTION = {
+            Bulletin.Column.ID,
+    };
+    private static final String NEW_BULLETIN_SELECTION = Bulletin.Column.CODE + " = ? AND " + Bulletin.Column.PUBLISHED + " != " + Bulletin.Column.ACCESSED;
+
     private BulletinAdapter adapter;
+
+    private View doneAllButton;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -59,15 +69,26 @@ public class BulletinsActivity extends AppCompatActivity implements LoaderManage
         });
         recyclerView.setAdapter(adapter = new BulletinAdapter(this));
 
-        final View actionButton = findViewById(R.id.done_all);
-        actionButton.setOnClickListener(new View.OnClickListener() {
+        doneAllButton = findViewById(R.id.done_all);
+        doneAllButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                actionButton.setVisibility(View.GONE);
+                new AsyncTask<Object, Void, Boolean>() {
+                    @Override
+                    protected Boolean doInBackground(Object... params) {
+                        ContentResolver contentResolver = (ContentResolver) params[0];
+
+                        contentResolver.update(Bulletin.CONTENT_URI, null, null, null);
+
+                        return Boolean.TRUE;
+                    }
+                }.execute(getContentResolver());
             }
         });
 
-        getSupportLoaderManager().initLoader(LOADER_BULLETINS, null, this);
+        LoaderManager loaderManager = getSupportLoaderManager();
+        loaderManager.initLoader(LOADER_BULLETINS, null, this);
+        loaderManager.initLoader(LOADER_NEW_BULLETINS, null, this);
 
         startService(new Intent(this, SyncService.class));
     }
@@ -82,22 +103,40 @@ public class BulletinsActivity extends AppCompatActivity implements LoaderManage
     @Override
     public Loader<Cursor> onCreateLoader(int id, Bundle args) {
         String[] selectionArgs = { Preferences.getCode(this) };
-        return new CursorLoader(this, Bulletin.CONTENT_URI, BULLETINS_PROJECTION, BULLETINS_SELECTION, selectionArgs, BULLETINS_SORT_ORDER);
+        switch (id) {
+            case LOADER_BULLETINS:
+                return new CursorLoader(this, Bulletin.CONTENT_URI, BULLETIN_PROJECTION, BULLETIN_SELECTION, selectionArgs, BULLETIN_SORT_ORDER);
+            case LOADER_NEW_BULLETINS:
+                return new CursorLoader(this, Bulletin.CONTENT_URI, NEW_BULLETIN_PROJECTION, NEW_BULLETIN_SELECTION, selectionArgs, null);
+        }
+
+        throw new IllegalArgumentException("Unsupported loader: " + id);
     }
 
     @Override
     public void onLoadFinished(Loader<Cursor> loader, Cursor cursor) {
-        ActionBar actionBar = getSupportActionBar();
-        if (actionBar != null) {
-            actionBar.setSubtitle(Preferences.getTitle(this));
-        }
+        switch (loader.getId()) {
+            case LOADER_BULLETINS:
+                ActionBar actionBar = getSupportActionBar();
+                if (actionBar != null) {
+                    actionBar.setSubtitle(Preferences.getTitle(this));
+                }
 
-        adapter.setCursor(cursor);
+                adapter.setCursor(cursor);
+                break;
+            case LOADER_NEW_BULLETINS:
+                doneAllButton.setVisibility(cursor.getCount() == 0 ? View.GONE : View.VISIBLE);
+                break;
+        }
     }
 
     @Override
     public void onLoaderReset(Loader<Cursor> loader) {
-        adapter.setCursor(null);
+        switch (loader.getId()) {
+            case LOADER_BULLETINS:
+                adapter.setCursor(null);
+                break;
+        }
     }
 
     private class BulletinViewHolder extends RecyclerView.ViewHolder {

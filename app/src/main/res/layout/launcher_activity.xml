@@ -52,7 +52,8 @@
                 android:layout_height="wrap_content"
                 android:src="@drawable/ic_action_done"
                 android:tint="@color/branding_blue"
-                support:fabSize="normal" />
+                support:fabSize="normal"
+                support:useCompatPadding="true" />
 
         </LinearLayout>
 

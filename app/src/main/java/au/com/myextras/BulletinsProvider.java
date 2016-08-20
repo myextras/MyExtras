@@ -9,6 +9,7 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteConstraintException;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
+import android.database.sqlite.SQLiteStatement;
 import android.net.Uri;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -99,7 +100,30 @@ public class BulletinsProvider extends ContentProvider {
 
     @Override
     public int update(@NonNull Uri uri, ContentValues values, String selection, String[] selectionArgs) {
+        switch (uriMatcher.match(uri)) {
+            case URI_BULLETINS:
+                return updateBulletins(values, selection, selectionArgs);
+        }
+
         throw new UnsupportedOperationException("Unsupported URI: " + uri);
+    }
+
+    private int updateBulletins(ContentValues values, String selection, String[] selectionArgs) {
+        SQLiteDatabase database = sqlite.getWritableDatabase();
+
+        int affectedRows;
+        if (values == null) {
+            SQLiteStatement statement = database.compileStatement("UPDATE " + TABLE_BULLETINS + " SET " + Bulletin.Column.ACCESSED + " = " + Bulletin.Column.PUBLISHED + " WHERE " + Bulletin.Column.ACCESSED + " != " + Bulletin.Column.PUBLISHED);
+            affectedRows = statement.executeUpdateDelete();
+        } else {
+            affectedRows = database.update(TABLE_BULLETINS, values, selection, selectionArgs);
+        }
+
+        if (affectedRows > 0) {
+            contentResolver.notifyChange(Bulletin.CONTENT_URI, null);
+        }
+
+        return affectedRows;
     }
 
     @Override

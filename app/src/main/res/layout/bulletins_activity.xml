@@ -14,8 +14,10 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:src="@drawable/ic_action_done_all"
+        android:visibility="gone"
         support:fabSize="normal"
         support:layout_anchor="@id/bulletins"
-        support:layout_anchorGravity="bottom|end" />
+        support:layout_anchorGravity="bottom|end"
+        support:useCompatPadding="true" />
 
 </android.support.design.widget.CoordinatorLayout>
