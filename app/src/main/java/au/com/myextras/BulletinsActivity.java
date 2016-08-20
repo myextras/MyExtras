@@ -1,5 +1,6 @@
 package au.com.myextras;
 
+import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
 import android.graphics.Rect;
@@ -13,6 +14,7 @@ import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.text.format.DateUtils;
 import android.view.Menu;
 import android.view.View;
 import android.view.ViewGroup;
@@ -35,7 +37,7 @@ public class BulletinsActivity extends AppCompatActivity implements LoaderManage
     private static final int BULLETIN_PUBLISHED = 2;
     private static final int BULLETIN_ACCESSED = 3;
 
-    private BulletinAdapter adapter = new BulletinAdapter();
+    private BulletinAdapter adapter;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -55,7 +57,7 @@ public class BulletinsActivity extends AppCompatActivity implements LoaderManage
                 outRect.set(spacing, position == 0 ? spacing : 0, spacing, spacing);
             }
         });
-        recyclerView.setAdapter(adapter);
+        recyclerView.setAdapter(adapter = new BulletinAdapter(this));
 
         final View actionButton = findViewById(R.id.done_all);
         actionButton.setOnClickListener(new View.OnClickListener() {
@@ -114,9 +116,13 @@ public class BulletinsActivity extends AppCompatActivity implements LoaderManage
 
     private class BulletinAdapter extends RecyclerView.Adapter<BulletinViewHolder> {
 
+        private Context context;
+
         private Cursor cursor;
 
-        public BulletinAdapter() {
+        public BulletinAdapter(Context context) {
+            this.context = context;
+
             setHasStableIds(true);
         }
 
@@ -138,7 +144,7 @@ public class BulletinsActivity extends AppCompatActivity implements LoaderManage
 
             holder.titleTextView.setText(cursor.getString(BULLETIN_TITLE));
             holder.titleTextView.setTypeface(cursor.getLong(BULLETIN_PUBLISHED) != cursor.getLong(BULLETIN_ACCESSED) ? Typeface.DEFAULT_BOLD : Typeface.DEFAULT);
-            holder.dateTextView.setText(String.format("Last update: %1$tF %1$tR", cursor.getLong(BULLETIN_PUBLISHED)));
+            holder.dateTextView.setText(getString(R.string.last_update, DateUtils.formatDateTime(context, cursor.getLong(BULLETIN_PUBLISHED), DateUtils.FORMAT_NUMERIC_DATE | DateUtils.FORMAT_SHOW_DATE | DateUtils.FORMAT_SHOW_YEAR | DateUtils.FORMAT_SHOW_TIME)));
         }
 
         @Override
