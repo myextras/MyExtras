@@ -29,6 +29,7 @@ public class BulletinsProvider extends ContentProvider {
 
     private SQLiteOpenHelper sqlite;
 
+    private Context context;
     private ContentResolver contentResolver;
 
     @Override
@@ -37,7 +38,7 @@ public class BulletinsProvider extends ContentProvider {
         uriMatcher.addURI(AUTHORITY, "bulletins", URI_BULLETINS);
         uriMatcher.addURI(AUTHORITY, "bulletins/#", URI_BULLETIN);
 
-        Context context = getContext();
+        context = getContext();
         assert context != null;
 
         sqlite = new DatabaseOpenHelper(context, "bulletins.db", 1);
@@ -66,6 +67,21 @@ public class BulletinsProvider extends ContentProvider {
 
     private Cursor queryBulletins(String[] projection, String selection, String[] selectionArgs, String sortOrder) {
         SQLiteDatabase database = sqlite.getReadableDatabase();
+
+        if (selection == null) {
+            selection = Bulletin.Column.CODE + " = ?";
+        } else {
+            selection = Bulletin.Column.CODE + " = ? AND (" + selection + ")";
+        }
+
+        if (selectionArgs == null || selectionArgs.length == 0) {
+            selectionArgs = new String[] { Preferences.getCode(context) };
+        } else {
+            String[] newSelectionArgs = new String[selectionArgs.length + 1];
+            newSelectionArgs[0] = Preferences.getCode(context);
+            System.arraycopy(selectionArgs, 0, newSelectionArgs, 1, selectionArgs.length);
+            selectionArgs = newSelectionArgs;
+        }
 
         Cursor cursor = database.query(TABLE_BULLETINS, projection, selection, selectionArgs, null, null, sortOrder);
         cursor.setNotificationUri(contentResolver, Bulletin.CONTENT_URI);

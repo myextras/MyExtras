@@ -18,6 +18,7 @@ import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.text.format.DateUtils;
 import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
@@ -33,17 +34,11 @@ public class BulletinsActivity extends AppCompatActivity implements LoaderManage
             Bulletin.Column.PUBLISHED,
             Bulletin.Column.ACCESSED,
     };
-    private static final String BULLETIN_SELECTION = Bulletin.Column.CODE + " = ?";
     private static final String BULLETIN_SORT_ORDER = Bulletin.Column.PUBLISHED + " DESC";
     private static final int BULLETIN_ID = 0;
     private static final int BULLETIN_TITLE = 1;
     private static final int BULLETIN_PUBLISHED = 2;
     private static final int BULLETIN_ACCESSED = 3;
-
-    private static final String[] NEW_BULLETIN_PROJECTION = {
-            Bulletin.Column.ID,
-    };
-    private static final String NEW_BULLETIN_SELECTION = Bulletin.Column.CODE + " = ? AND " + Bulletin.Column.PUBLISHED + " != " + Bulletin.Column.ACCESSED;
 
     private BulletinAdapter adapter;
 
@@ -101,13 +96,23 @@ public class BulletinsActivity extends AppCompatActivity implements LoaderManage
     }
 
     @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case R.id.settings:
+                startActivity(new Intent(this, PreferencesActivity.class));
+                return true;
+        }
+
+        return super.onOptionsItemSelected(item);
+    }
+
+    @Override
     public Loader<Cursor> onCreateLoader(int id, Bundle args) {
-        String[] selectionArgs = { Preferences.getCode(this) };
         switch (id) {
             case LOADER_BULLETINS:
-                return new CursorLoader(this, Bulletin.CONTENT_URI, BULLETIN_PROJECTION, BULLETIN_SELECTION, selectionArgs, BULLETIN_SORT_ORDER);
+                return new CursorLoader(this, Bulletin.CONTENT_URI, BULLETIN_PROJECTION, null, null, BULLETIN_SORT_ORDER);
             case LOADER_NEW_BULLETINS:
-                return new CursorLoader(this, Bulletin.CONTENT_URI, NEW_BULLETIN_PROJECTION, NEW_BULLETIN_SELECTION, selectionArgs, null);
+                return new CursorLoader(this, Bulletin.CONTENT_URI, BULLETIN_PROJECTION, Bulletin.Column.PUBLISHED + " != " + Bulletin.Column.ACCESSED, null, null);
         }
 
         throw new IllegalArgumentException("Unsupported loader: " + id);
@@ -125,7 +130,7 @@ public class BulletinsActivity extends AppCompatActivity implements LoaderManage
                 adapter.setCursor(cursor);
                 break;
             case LOADER_NEW_BULLETINS:
-                doneAllButton.setVisibility(cursor.getCount() == 0 ? View.GONE : View.VISIBLE);
+                doneAllButton.setVisibility(cursor.getCount() == 0 ? View.INVISIBLE : View.VISIBLE);
                 break;
         }
     }

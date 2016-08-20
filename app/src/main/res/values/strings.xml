@@ -1,7 +1,7 @@
 <resources>
     <string name="app_name" translatable="false">MyExtras</string>
 
-    <string name="bulletin_code">Bulletin Code</string>
+    <string name="bulletin_code">Bulletin code</string>
     <string name="last_update">Last update: %s</string>
     <string name="settings">Settings</string>
 </resources>

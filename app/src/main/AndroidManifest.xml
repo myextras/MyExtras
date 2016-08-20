@@ -26,6 +26,10 @@
 
         <activity android:name=".BulletinsActivity" />
 
+        <activity
+            android:name=".PreferencesActivity"
+            android:label="@string/settings" />
+
         <service android:name=".SyncService" />
 
     </application>
