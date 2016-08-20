@@ -84,8 +84,6 @@ public class BulletinsActivity extends AppCompatActivity implements LoaderManage
         LoaderManager loaderManager = getSupportLoaderManager();
         loaderManager.initLoader(LOADER_BULLETINS, null, this);
         loaderManager.initLoader(LOADER_NEW_BULLETINS, null, this);
-
-        startService(new Intent(this, SyncService.class));
     }
 
     @Override

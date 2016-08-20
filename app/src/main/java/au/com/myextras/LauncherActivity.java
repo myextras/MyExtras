@@ -85,6 +85,8 @@ public class LauncherActivity extends AppCompatActivity implements View.OnClickL
         intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
         startActivity(intent);
 
+        startService(new Intent(this, SyncService.class));
+
         finish();
     }
 

@@ -1,6 +1,7 @@
 <manifest package="au.com.myextras"
     xmlns:android="http://schemas.android.com/apk/res/android">
 
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
     <uses-permission android:name="android.permission.INTERNET" />
 
     <application
@@ -31,6 +32,13 @@
             android:label="@string/settings" />
 
         <service android:name=".SyncService" />
+
+        <receiver android:name=".SyncReceiver">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
+            </intent-filter>
+        </receiver>
 
     </application>
 
