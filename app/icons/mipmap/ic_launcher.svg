@@ -31,7 +31,7 @@
      inkscape:cy="20.12868"
      inkscape:document-units="px"
      inkscape:current-layer="g4748"
-     showgrid="false"
+     showgrid="true"
      fit-margin-top="6"
      fit-margin-left="6"
      fit-margin-right="6"
@@ -43,7 +43,7 @@
      inkscape:window-y="27"
      inkscape:window-maximized="1"
      units="px"
-     showguides="true"
+     showguides="false"
      inkscape:guide-bbox="true">
     <inkscape:grid
        type="xygrid"
@@ -102,6 +102,19 @@
          inkscape:collect="always"
          stdDeviation="0.6"
          id="feGaussianBlur6012" />
+    </filter>
+    <filter
+       inkscape:collect="always"
+       style="color-interpolation-filters:sRGB"
+       id="filter4424"
+       x="-0.024"
+       width="1.048"
+       y="-0.024"
+       height="1.048">
+      <feGaussianBlur
+         inkscape:collect="always"
+         stdDeviation="0.4"
+         id="feGaussianBlur4426" />
     </filter>
   </defs>
   <metadata
@@ -277,12 +290,12 @@
      id="g4748"
      inkscape:groupmode="layer">
     <rect
-       style="opacity:1;fill:#000000;fill-opacity:1;stroke:none;stroke-width:2;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;filter:url(#filter6010)"
+       style="opacity:1;fill:#333333;fill-opacity:0.49803922;stroke:none;stroke-width:2;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;filter:url(#filter4424)"
        id="rect4750"
        width="40"
        height="40"
        x="4"
-       y="4.5"
+       y="5"
        rx="2"
        ry="2" />
     <rect
@@ -295,7 +308,7 @@
        id="rect4752"
        style="opacity:1;fill:#2d99ce;fill-opacity:1;stroke:none;stroke-width:2;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" />
     <path
-       style="opacity:0.15;fill:#000000;fill-opacity:1;stroke:none;stroke-width:2;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       style="opacity:0.08;fill:#000000;fill-opacity:1;stroke:none;stroke-width:2;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
        d="M 39.902344 21.753906 C 39.963054 21.838056 39.99885 21.939924 40 22.048828 C 40.002 22.273028 39.859184 22.472649 39.646484 22.542969 L 34.394531 24.285156 C 33.182841 22.631516 28.154232 22.047021 23.857422 22.212891 C 23.580592 22.223491 23.36434 22.457195 23.375 22.734375 C 23.3857 23.011405 23.619534 23.225414 23.896484 23.214844 C 29.201114 23.010194 33.079864 23.948634 33.632812 24.933594 L 33.759766 28.207031 C 33.761766 28.219931 33.769531 28.233494 33.769531 28.246094 C 33.818931 29.525414 29.509808 30.73048 24.142578 30.9375 C 18.776348 31.14452 14.387221 30.275424 14.337891 28.996094 C 14.337381 28.981394 14.344703 28.965672 14.345703 28.951172 L 14.201172 25.191406 L 11.40625 24.498047 L 11.570312 28.769531 C 12.142662 28.962361 12.560954 29.456808 12.583984 30.054688 C 12.604484 30.587136 12.304346 31.058859 11.847656 31.324219 L 12.228516 32.960938 C 12.404478 33.6019 10.305838 34.536724 9.8320312 34.291016 L 19.539062 44 L 42 44 C 43.108 44 44 43.108 44 42 L 44 25.851562 L 39.902344 21.753906 z "
        id="rect12044" />
   </g>
