@@ -33,12 +33,14 @@ public class BulletinsActivity extends AppCompatActivity implements LoaderManage
             Bulletin.Column.TITLE,
             Bulletin.Column.PUBLISHED,
             Bulletin.Column.ACCESSED,
+            Bulletin.Column.IMPORTANT,
     };
     private static final String BULLETIN_SORT_ORDER = Bulletin.Column.PUBLISHED + " DESC";
     private static final int BULLETIN_ID = 0;
     private static final int BULLETIN_TITLE = 1;
     private static final int BULLETIN_PUBLISHED = 2;
     private static final int BULLETIN_ACCESSED = 3;
+    private static final int BULLETIN_IMPORTANT = 4;
 
     private BulletinAdapter adapter;
 
@@ -146,12 +148,14 @@ public class BulletinsActivity extends AppCompatActivity implements LoaderManage
 
         final TextView titleTextView;
         final TextView dateTextView;
+        final View importantView;
 
         public BulletinViewHolder(View itemView) {
             super(itemView);
 
             titleTextView = (TextView) itemView.findViewById(R.id.title);
             dateTextView = (TextView) itemView.findViewById(R.id.date);
+            importantView = itemView.findViewById(R.id.important);
         }
 
     }
@@ -187,6 +191,7 @@ public class BulletinsActivity extends AppCompatActivity implements LoaderManage
             holder.titleTextView.setText(cursor.getString(BULLETIN_TITLE));
             holder.titleTextView.setTypeface(cursor.getLong(BULLETIN_PUBLISHED) != cursor.getLong(BULLETIN_ACCESSED) ? Typeface.DEFAULT_BOLD : Typeface.DEFAULT);
             holder.dateTextView.setText(getString(R.string.last_update, DateUtils.formatDateTime(context, cursor.getLong(BULLETIN_PUBLISHED), DateUtils.FORMAT_NUMERIC_DATE | DateUtils.FORMAT_SHOW_DATE | DateUtils.FORMAT_SHOW_YEAR | DateUtils.FORMAT_SHOW_TIME)));
+            holder.importantView.setVisibility(cursor.getInt(BULLETIN_IMPORTANT) != 0 ? View.VISIBLE : View.GONE);
         }
 
         @Override

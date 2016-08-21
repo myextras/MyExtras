@@ -21,6 +21,7 @@ public class Bulletin {
         public static final String LINK = "link";
         public static final String CONTENT = "content";
         public static final String PUBLISHED = "published";
+        public static final String IMPORTANT = "important";
 
         public static final String ACCESSED = "accessed";
 

@@ -149,6 +149,13 @@ public final class FeedParser {
                 handleEntryPublished(text);
             }
         });
+
+        itemElement.addChild(new TextElement("category", rssNamespaces) {
+            @Override
+            protected void handleText(String text) {
+                handleEntryCategory(text);
+            }
+        });
     }
 
     private void handleFeedTitle(String title) {
@@ -193,6 +200,10 @@ public final class FeedParser {
         }
     }
 
+    private void handleEntryCategory(String category) {
+        currentEntry.category = category;
+    }
+
     public class Result {
 
         public String url;
@@ -214,6 +225,7 @@ public final class FeedParser {
                 public String content;
                 public String published;
                 public Date publishedTimestamp;
+                public String category;
 
             }
         }

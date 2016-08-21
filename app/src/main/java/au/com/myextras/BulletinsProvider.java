@@ -114,8 +114,8 @@ public class BulletinsProvider extends ContentProvider {
         try {
             database.insertOrThrow(TABLE_BULLETINS, null, values);
         } catch (SQLiteConstraintException exception) {
-            String selection = Bulletin.Column.GUID + " = ?";
-            String[] selectionArgs = { values.getAsString(Bulletin.Column.GUID) };
+            String selection = Bulletin.Column.CODE + " = ? AND " + Bulletin.Column.GUID + " = ?";
+            String[] selectionArgs = { values.getAsString(Bulletin.Column.CODE), values.getAsString(Bulletin.Column.GUID) };
             database.update(TABLE_BULLETINS, values, selection, selectionArgs);
         }
 
@@ -139,7 +139,8 @@ public class BulletinsProvider extends ContentProvider {
 
         int affectedRows;
         if (values == null) {
-            SQLiteStatement statement = database.compileStatement("UPDATE " + TABLE_BULLETINS + " SET " + Bulletin.Column.ACCESSED + " = " + Bulletin.Column.PUBLISHED + " WHERE " + Bulletin.Column.ACCESSED + " != " + Bulletin.Column.PUBLISHED);
+            SQLiteStatement statement = database.compileStatement("UPDATE " + TABLE_BULLETINS + " SET " + Bulletin.Column.ACCESSED + " = " + Bulletin.Column.PUBLISHED + " WHERE " + Bulletin.Column.CODE + " = ? AND " + Bulletin.Column.ACCESSED + " != " + Bulletin.Column.PUBLISHED);
+            statement.bindAllArgsAsStrings(new String[] { Preferences.getCode(context) });
             affectedRows = statement.executeUpdateDelete();
         } else {
             affectedRows = database.update(TABLE_BULLETINS, values, selection, selectionArgs);
@@ -164,21 +165,27 @@ public class BulletinsProvider extends ContentProvider {
             Bulletin.Column.TITLE,
             Bulletin.Column.PUBLISHED,
             Bulletin.Column.ACCESSED,
+            Bulletin.Column.IMPORTANT,
     };
+    private static final String NOTIFICATION_BULLETIN_SELECTION = Bulletin.Column.CODE + " = ?";
     private static final String NOTIFICATION_BULLETIN_SORT_ORDER = Bulletin.Column.PUBLISHED + " DESC";
     private static final int NOTIFICATION_BULLETIN_ID = 0;
     private static final int NOTIFICATION_BULLETIN_TITLE = 1;
     private static final int NOTIFICATION_BULLETIN_PUBLISHED = 2;
     private static final int NOTIFICATION_BULLETIN_ACCESSED = 3;
+    private static final int NOTIFICATION_BULLETIN_IMPORTANT = 4;
 
     @WorkerThread
     public void updateNotification(SQLiteDatabase database) {
-        Cursor cursor = database.query(TABLE_BULLETINS, NOTIFICATION_BULLETIN_PROJECTION, null, null, null, null, NOTIFICATION_BULLETIN_SORT_ORDER);
+        String[] selectionArgs = { Preferences.getCode(context) };
+        Cursor cursor = database.query(TABLE_BULLETINS, NOTIFICATION_BULLETIN_PROJECTION, NOTIFICATION_BULLETIN_SELECTION, selectionArgs, null, null, NOTIFICATION_BULLETIN_SORT_ORDER, "1");
 
         if (cursor != null) {
             NotificationManager notificationManager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
 
-            if (cursor.moveToFirst() && cursor.getLong(NOTIFICATION_BULLETIN_PUBLISHED) != cursor.getLong(NOTIFICATION_BULLETIN_ACCESSED)) {
+            if (cursor.moveToFirst()
+                    && cursor.getLong(NOTIFICATION_BULLETIN_PUBLISHED) != cursor.getLong(NOTIFICATION_BULLETIN_ACCESSED)
+                    && cursor.getInt(NOTIFICATION_BULLETIN_IMPORTANT) != 0) {
                 Uri uri = ContentUris.withAppendedId(Bulletin.CONTENT_URI, cursor.getLong(NOTIFICATION_BULLETIN_ID));
 
                 Intent intent = new Intent(context, BulletinsActivity.class);

@@ -41,6 +41,7 @@ public class SyncService extends IntentService {
                     values.put(Bulletin.Column.LINK, entry.link);
                     values.put(Bulletin.Column.CONTENT, entry.content);
                     values.put(Bulletin.Column.PUBLISHED, entry.publishedTimestamp.getTime());
+                    values.put(Bulletin.Column.IMPORTANT, "important".equals(entry.category));
 
                     contentResolver.insert(Bulletin.CONTENT_URI, values);
                 }
