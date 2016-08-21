@@ -3,9 +3,13 @@ package au.com.myextras;
 import android.app.AlarmManager;
 import android.app.IntentService;
 import android.app.PendingIntent;
+import android.app.job.JobInfo;
+import android.app.job.JobScheduler;
+import android.content.ComponentName;
 import android.content.ContentResolver;
 import android.content.ContentValues;
 import android.content.Intent;
+import android.os.Build;
 import android.util.Log;
 
 import java.util.Calendar;
@@ -100,11 +104,22 @@ public class SyncService extends IntentService {
         Date nextSyncDate = calendar.getTime();
         Log.d(getClass().getName(), "Next sync: " + nextSyncDate);
 
-        Intent intent = new Intent(this, SyncService.class);
-        PendingIntent pendingIntent = PendingIntent.getService(this, 0, intent, 0);
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
+            Intent intent = new Intent(this, SyncService.class);
+            PendingIntent pendingIntent = PendingIntent.getService(this, 0, intent, 0);
 
-        AlarmManager alarmManager = (AlarmManager) getSystemService(ALARM_SERVICE);
-        alarmManager.set(AlarmManager.RTC, nextSyncDate.getTime(), pendingIntent);
+            AlarmManager alarmManager = (AlarmManager) getSystemService(ALARM_SERVICE);
+            alarmManager.set(AlarmManager.RTC, nextSyncDate.getTime(), pendingIntent);
+        } else {
+            JobScheduler jobScheduler = (JobScheduler) getSystemService(JOB_SCHEDULER_SERVICE);
+
+            JobInfo jobInfo = new JobInfo.Builder(R.id.sync_job, new ComponentName(this, SyncJobService.class))
+                    .setRequiredNetworkType(JobInfo.NETWORK_TYPE_ANY)
+                    .setMinimumLatency(nextSyncDate.getTime() - System.currentTimeMillis())
+                    .build();
+
+            jobScheduler.schedule(jobInfo);
+        }
     }
 
 }
