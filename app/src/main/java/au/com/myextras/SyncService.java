@@ -61,22 +61,31 @@ public class SyncService extends IntentService {
 
 
     private void scheduleNextSync() {
-        // every 15 minutes from 7:00 to 9:00
-        // every hour from 10:00 to 23:00
-        // no updates on weekends
+        // on work days:
+        //   every 15 minutes from 7:00 to 10:00
+        //   every hour from 10:00 to 23:00
+        // saturday:
+        //   no updates
+        // sunday:
+        //   every hour from 18:00 to 23:00
 
         Calendar calendar = Calendar.getInstance();
         calendar.set(Calendar.SECOND, 0);
         calendar.set(Calendar.MILLISECOND, 0);
         calendar.set(Calendar.MINUTE, calendar.get(Calendar.MINUTE) / 15 * 15);
 
+        int hour;
         switch (calendar.get(Calendar.DAY_OF_WEEK)) {
-            case Calendar.SATURDAY:
-                calendar.add(Calendar.DATE, 1);
-                // break omitted intentionally
             case Calendar.SUNDAY:
-                calendar.add(Calendar.DATE, 1);
-                calendar.set(Calendar.HOUR_OF_DAY, 7);
+                hour = calendar.get(Calendar.HOUR_OF_DAY);
+                if (hour < 18) {
+                    calendar.set(Calendar.HOUR_OF_DAY, 18);
+                } else if (hour < 23) {
+                    calendar.add(Calendar.HOUR_OF_DAY, 1);
+                } else {
+                    calendar.add(Calendar.DATE, 1);
+                    calendar.set(Calendar.HOUR_OF_DAY, 7);
+                }
                 calendar.set(Calendar.MINUTE, 0);
                 break;
             case Calendar.MONDAY:
@@ -84,20 +93,29 @@ public class SyncService extends IntentService {
             case Calendar.WEDNESDAY:
             case Calendar.THURSDAY:
             case Calendar.FRIDAY:
-                int hour = calendar.get(Calendar.HOUR_OF_DAY);
+                hour = calendar.get(Calendar.HOUR_OF_DAY);
                 if (hour < 7) {
                     calendar.set(Calendar.HOUR_OF_DAY, 7);
                     calendar.set(Calendar.MINUTE, 0);
-                } else if (hour < 9) {
+                } else if (hour < 10) {
                     calendar.add(Calendar.MINUTE, 15);
                 } else if (hour < 23) {
                     calendar.add(Calendar.HOUR_OF_DAY, 1);
                     calendar.set(Calendar.MINUTE, 0);
+                } else if (calendar.get(Calendar.DAY_OF_WEEK) == Calendar.FRIDAY) {
+                    calendar.add(Calendar.DATE, 2);
+                    calendar.set(Calendar.HOUR_OF_DAY, 18);
+                    calendar.set(Calendar.MINUTE, 0);
                 } else {
-                    calendar.add(Calendar.DATE, calendar.get(Calendar.DAY_OF_WEEK) == Calendar.FRIDAY ? 3 : 1);
+                    calendar.add(Calendar.DATE, 1);
                     calendar.set(Calendar.HOUR_OF_DAY, 7);
                     calendar.set(Calendar.MINUTE, 0);
                 }
+                break;
+            case Calendar.SATURDAY:
+                calendar.add(Calendar.DATE, 1);
+                calendar.set(Calendar.HOUR_OF_DAY, 18);
+                calendar.set(Calendar.MINUTE, 0);
                 break;
         }
 
