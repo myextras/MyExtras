@@ -14,3 +14,10 @@ CREATE TABLE entries (
 
     UNIQUE (bulletin, guid)
 );
+
+-- a trigger that limits the entries table to 50 records
+CREATE TRIGGER delete_old_entries
+    AFTER INSERT ON entries
+    BEGIN
+        DELETE FROM entries WHERE published < (SELECT published FROM entries ORDER BY published DESC LIMIT 49, 1);
+    END;
