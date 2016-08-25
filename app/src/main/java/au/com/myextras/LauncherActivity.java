@@ -30,7 +30,7 @@ public class LauncherActivity extends AppCompatActivity implements View.OnClickL
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        setContentView(R.layout.launcher_activity);
+        setContentView(R.layout.launcher);
 
         configurationView = findViewById(R.id.configuration);
 
@@ -81,7 +81,7 @@ public class LauncherActivity extends AppCompatActivity implements View.OnClickL
     }
 
     private void startMainActivity() {
-        Intent intent = new Intent(this, BulletinsActivity.class);
+        Intent intent = new Intent(this, EntriesActivity.class);
         intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
         startActivity(intent);
 

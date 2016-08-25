@@ -5,7 +5,7 @@
     android:layout_height="match_parent">
 
     <android.support.v7.widget.RecyclerView
-        android:id="@+id/bulletins"
+        android:id="@+id/entries"
         android:layout_width="match_parent"
         android:layout_height="match_parent" />
 
@@ -16,7 +16,7 @@
         android:src="@drawable/ic_action_done_all"
         android:visibility="gone"
         support:fabSize="normal"
-        support:layout_anchor="@id/bulletins"
+        support:layout_anchor="@id/entries"
         support:layout_anchorGravity="bottom|end"
         support:useCompatPadding="true" />
 

@@ -25,7 +25,9 @@
             </intent-filter>
         </activity>
 
-        <activity android:name=".BulletinsActivity" />
+        <activity android:name=".EntriesActivity" />
+
+        <activity android:name=".ReaderActivity" />
 
         <activity
             android:name=".PreferencesActivity"

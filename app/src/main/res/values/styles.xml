@@ -1,6 +1,7 @@
 <resources>
 
     <style name="AppTheme" parent="Theme.AppCompat.Light.DarkActionBar">
+        <item name="android:windowBackground">@color/background</item>
         <item name="colorPrimary">@color/branding_blue</item>
         <item name="colorPrimaryDark">@color/branding_grey</item>
         <item name="colorAccent">@color/branding_blue</item>
@@ -14,12 +15,12 @@
         <item name="colorAccent">@android:color/white</item>
     </style>
 
-    <style name="TextAppearance.BulletinTitle" parent="TextAppearance.AppCompat">
+    <style name="TextAppearance.EntryTitle" parent="TextAppearance.AppCompat">
         <item name="android:textSize">18sp</item>
         <item name="android:textColor">?android:textColorPrimary</item>
     </style>
 
-    <style name="TextAppearance.BulletinDate" parent="TextAppearance.AppCompat">
+    <style name="TextAppearance.EntryDate" parent="TextAppearance.AppCompat">
         <item name="android:textSize">14sp</item>
         <item name="android:textColor">?android:textColorPrimary</item>
     </style>

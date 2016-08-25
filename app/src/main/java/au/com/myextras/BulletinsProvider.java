@@ -28,10 +28,10 @@ public class BulletinsProvider extends ContentProvider {
 
     public static final String AUTHORITY = BuildConfig.APPLICATION_ID + ".bulletins";
 
-    private static final int URI_BULLETINS = 1;
-    private static final int URI_BULLETIN = 2;
+    private static final int URI_ENTRIES = 1;
+    private static final int URI_ENTRY = 2;
 
-    private static final String TABLE_BULLETINS = "bulletins";
+    private static final String TABLE_ENTRIES = "entries";
 
     private UriMatcher uriMatcher;
 
@@ -43,8 +43,8 @@ public class BulletinsProvider extends ContentProvider {
     @Override
     public boolean onCreate() {
         uriMatcher = new UriMatcher(UriMatcher.NO_MATCH);
-        uriMatcher.addURI(AUTHORITY, "bulletins", URI_BULLETINS);
-        uriMatcher.addURI(AUTHORITY, "bulletins/#", URI_BULLETIN);
+        uriMatcher.addURI(AUTHORITY, "entries", URI_ENTRIES);
+        uriMatcher.addURI(AUTHORITY, "entries/#", URI_ENTRY);
 
         context = getContext();
         assert context != null;
@@ -66,20 +66,20 @@ public class BulletinsProvider extends ContentProvider {
     @Override
     public Cursor query(@NonNull Uri uri, String[] projection, String selection, String[] selectionArgs, String sortOrder) {
         switch (uriMatcher.match(uri)) {
-            case URI_BULLETINS:
-                return queryBulletins(projection, selection, selectionArgs, sortOrder);
+            case URI_ENTRIES:
+                return queryEntries(projection, selection, selectionArgs, sortOrder);
         }
 
         throw new UnsupportedOperationException("Unsupported URI: " + uri);
     }
 
-    private Cursor queryBulletins(String[] projection, String selection, String[] selectionArgs, String sortOrder) {
+    private Cursor queryEntries(String[] projection, String selection, String[] selectionArgs, String sortOrder) {
         SQLiteDatabase database = sqlite.getReadableDatabase();
 
         if (selection == null) {
-            selection = Bulletin.Column.CODE + " = ?";
+            selection = Entry.Columns.BULLETIN + " = ?";
         } else {
-            selection = Bulletin.Column.CODE + " = ? AND (" + selection + ")";
+            selection = Entry.Columns.BULLETIN + " = ? AND (" + selection + ")";
         }
 
         if (selectionArgs == null || selectionArgs.length == 0) {
@@ -91,8 +91,8 @@ public class BulletinsProvider extends ContentProvider {
             selectionArgs = newSelectionArgs;
         }
 
-        Cursor cursor = database.query(TABLE_BULLETINS, projection, selection, selectionArgs, null, null, sortOrder);
-        cursor.setNotificationUri(contentResolver, Bulletin.CONTENT_URI);
+        Cursor cursor = database.query(TABLE_ENTRIES, projection, selection, selectionArgs, null, null, sortOrder);
+        cursor.setNotificationUri(contentResolver, Entry.CONTENT_URI);
 
         return cursor;
     }
@@ -101,22 +101,22 @@ public class BulletinsProvider extends ContentProvider {
     @Override
     public Uri insert(@NonNull Uri uri, ContentValues values) {
         switch (uriMatcher.match(uri)) {
-            case URI_BULLETINS:
-                return insertBulletin(values);
+            case URI_ENTRIES:
+                return insertEntry(values);
         }
 
         throw new UnsupportedOperationException("Unsupported URI: " + uri);
     }
 
-    private Uri insertBulletin(ContentValues values) {
+    private Uri insertEntry(ContentValues values) {
         SQLiteDatabase database = sqlite.getWritableDatabase();
 
         try {
-            database.insertOrThrow(TABLE_BULLETINS, null, values);
+            database.insertOrThrow(TABLE_ENTRIES, null, values);
         } catch (SQLiteConstraintException exception) {
-            String selection = Bulletin.Column.CODE + " = ? AND " + Bulletin.Column.GUID + " = ?";
-            String[] selectionArgs = { values.getAsString(Bulletin.Column.CODE), values.getAsString(Bulletin.Column.GUID) };
-            database.update(TABLE_BULLETINS, values, selection, selectionArgs);
+            String selection = Entry.Columns.BULLETIN + " = ? AND " + Entry.Columns.GUID + " = ?";
+            String[] selectionArgs = { values.getAsString(Entry.Columns.BULLETIN), values.getAsString(Entry.Columns.GUID) };
+            database.update(TABLE_ENTRIES, values, selection, selectionArgs);
         }
 
         updateNotification(database);
@@ -127,27 +127,34 @@ public class BulletinsProvider extends ContentProvider {
     @Override
     public int update(@NonNull Uri uri, ContentValues values, String selection, String[] selectionArgs) {
         switch (uriMatcher.match(uri)) {
-            case URI_BULLETINS:
-                return updateBulletins(values, selection, selectionArgs);
+            case URI_ENTRIES:
+                return updateEntries(values, selection, selectionArgs);
+            case URI_ENTRY:
+                if (selection != null) {
+                    selection = Entry.Columns.ID + " = " + uri.getLastPathSegment() + " AND (" + selection + ")";
+                } else {
+                    selection = Entry.Columns.ID + " = " + uri.getLastPathSegment();
+                }
+                return updateEntries(values, selection, selectionArgs);
         }
 
         throw new UnsupportedOperationException("Unsupported URI: " + uri);
     }
 
-    private int updateBulletins(ContentValues values, String selection, String[] selectionArgs) {
+    private int updateEntries(ContentValues values, String selection, String[] selectionArgs) {
         SQLiteDatabase database = sqlite.getWritableDatabase();
 
         int affectedRows;
         if (values == null) {
-            SQLiteStatement statement = database.compileStatement("UPDATE " + TABLE_BULLETINS + " SET " + Bulletin.Column.ACCESSED + " = " + Bulletin.Column.PUBLISHED + " WHERE " + Bulletin.Column.CODE + " = ? AND " + Bulletin.Column.ACCESSED + " != " + Bulletin.Column.PUBLISHED);
+            SQLiteStatement statement = database.compileStatement("UPDATE " + TABLE_ENTRIES + " SET " + Entry.Columns.ACCESSED + " = " + Entry.Columns.PUBLISHED + " WHERE " + Entry.Columns.BULLETIN + " = ? AND " + Entry.Columns.ACCESSED + " != " + Entry.Columns.PUBLISHED);
             statement.bindAllArgsAsStrings(new String[] { Preferences.getCode(context) });
             affectedRows = statement.executeUpdateDelete();
         } else {
-            affectedRows = database.update(TABLE_BULLETINS, values, selection, selectionArgs);
+            affectedRows = database.update(TABLE_ENTRIES, values, selection, selectionArgs);
         }
 
         if (affectedRows > 0) {
-            contentResolver.notifyChange(Bulletin.CONTENT_URI, null);
+            contentResolver.notifyChange(Entry.CONTENT_URI, null);
         }
 
         updateNotification(database);
@@ -160,42 +167,42 @@ public class BulletinsProvider extends ContentProvider {
         throw new UnsupportedOperationException("Unsupported URI: " + uri);
     }
 
-    private static final String[] NOTIFICATION_BULLETIN_PROJECTION = {
-            Bulletin.Column.ID,
-            Bulletin.Column.TITLE,
-            Bulletin.Column.PUBLISHED,
-            Bulletin.Column.ACCESSED,
-            Bulletin.Column.IMPORTANT,
+    private static final String[] NOTIFICATION_ENTRY_PROJECTION = {
+            Entry.Columns.ID,
+            Entry.Columns.TITLE,
+            Entry.Columns.PUBLISHED,
+            Entry.Columns.ACCESSED,
+            Entry.Columns.IMPORTANT,
     };
-    private static final String NOTIFICATION_BULLETIN_SELECTION = Bulletin.Column.CODE + " = ?";
-    private static final String NOTIFICATION_BULLETIN_SORT_ORDER = Bulletin.Column.PUBLISHED + " DESC";
-    private static final int NOTIFICATION_BULLETIN_ID = 0;
-    private static final int NOTIFICATION_BULLETIN_TITLE = 1;
-    private static final int NOTIFICATION_BULLETIN_PUBLISHED = 2;
-    private static final int NOTIFICATION_BULLETIN_ACCESSED = 3;
-    private static final int NOTIFICATION_BULLETIN_IMPORTANT = 4;
+    private static final String NOTIFICATION_ENTRY_SELECTION = Entry.Columns.BULLETIN + " = ?";
+    private static final String NOTIFICATION_ENTRY_SORT_ORDER = Entry.Columns.PUBLISHED + " DESC";
+    private static final int NOTIFICATION_ENTRY_ID = 0;
+    private static final int NOTIFICATION_ENTRY_TITLE = 1;
+    private static final int NOTIFICATION_ENTRY_PUBLISHED = 2;
+    private static final int NOTIFICATION_ENTRY_ACCESSED = 3;
+    private static final int NOTIFICATION_ENTRY_IMPORTANT = 4;
 
     @WorkerThread
     public void updateNotification(SQLiteDatabase database) {
         String[] selectionArgs = { Preferences.getCode(context) };
-        Cursor cursor = database.query(TABLE_BULLETINS, NOTIFICATION_BULLETIN_PROJECTION, NOTIFICATION_BULLETIN_SELECTION, selectionArgs, null, null, NOTIFICATION_BULLETIN_SORT_ORDER, "1");
+        Cursor cursor = database.query(TABLE_ENTRIES, NOTIFICATION_ENTRY_PROJECTION, NOTIFICATION_ENTRY_SELECTION, selectionArgs, null, null, NOTIFICATION_ENTRY_SORT_ORDER, "1");
 
         if (cursor != null) {
             NotificationManager notificationManager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
 
             if (cursor.moveToFirst()
-                    && cursor.getLong(NOTIFICATION_BULLETIN_PUBLISHED) != cursor.getLong(NOTIFICATION_BULLETIN_ACCESSED)
-                    && cursor.getInt(NOTIFICATION_BULLETIN_IMPORTANT) != 0) {
-                Uri uri = ContentUris.withAppendedId(Bulletin.CONTENT_URI, cursor.getLong(NOTIFICATION_BULLETIN_ID));
+                    && cursor.getLong(NOTIFICATION_ENTRY_PUBLISHED) != cursor.getLong(NOTIFICATION_ENTRY_ACCESSED)
+                    && cursor.getInt(NOTIFICATION_ENTRY_IMPORTANT) != 0) {
+                Uri uri = ContentUris.withAppendedId(Entry.CONTENT_URI, cursor.getLong(NOTIFICATION_ENTRY_ID));
 
-                Intent intent = new Intent(context, BulletinsActivity.class);
+                Intent intent = new Intent(context, EntriesActivity.class);
                 intent.setData(uri);
                 PendingIntent pendingIntent = PendingIntent.getActivity(context, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
 
                 Notification notification = new NotificationCompat.Builder(context)
                         .setSmallIcon(R.drawable.ic_stat_notify)
                         .setContentTitle(Preferences.getTitle(context))
-                        .setContentText(cursor.getString(NOTIFICATION_BULLETIN_TITLE))
+                        .setContentText(cursor.getString(NOTIFICATION_ENTRY_TITLE))
                         .setContentIntent(pendingIntent)
                         .setColor(ResourcesCompat.getColor(context.getResources(), R.color.branding_blue, null))
                         .setAutoCancel(true)

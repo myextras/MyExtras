@@ -1,8 +1,8 @@
--- create table for bulletins
-CREATE TABLE bulletins (
+-- create the entries table
+CREATE TABLE entries (
     _id INTEGER PRIMARY KEY,
 
-    code TEXT NOT NULL,
+    bulletin TEXT NOT NULL,
     guid TEXT NOT NULL,
     title TEXT NOT NULL,
     link TEXT,
@@ -12,5 +12,5 @@ CREATE TABLE bulletins (
 
     accessed INTEGER NOT NULL DEFAULT 0,
 
-    UNIQUE (code, guid)
+    UNIQUE (bulletin, guid)
 );

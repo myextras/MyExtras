@@ -39,18 +39,18 @@ public class SyncService extends IntentService {
 
                 for (FeedParser.Result.Feed.Entry entry : result.feed.entries) {
                     ContentValues values = new ContentValues();
-                    values.put(Bulletin.Column.CODE, code);
-                    values.put(Bulletin.Column.GUID, entry.guid);
-                    values.put(Bulletin.Column.TITLE, entry.title);
-                    values.put(Bulletin.Column.LINK, entry.link);
-                    values.put(Bulletin.Column.CONTENT, entry.content);
-                    values.put(Bulletin.Column.PUBLISHED, entry.publishedTimestamp.getTime());
-                    values.put(Bulletin.Column.IMPORTANT, "important".equals(entry.category));
+                    values.put(Entry.Columns.BULLETIN, code);
+                    values.put(Entry.Columns.GUID, entry.guid);
+                    values.put(Entry.Columns.TITLE, entry.title);
+                    values.put(Entry.Columns.LINK, entry.link);
+                    values.put(Entry.Columns.CONTENT, entry.content);
+                    values.put(Entry.Columns.PUBLISHED, entry.publishedTimestamp.getTime());
+                    values.put(Entry.Columns.IMPORTANT, "important".equals(entry.category));
 
-                    contentResolver.insert(Bulletin.CONTENT_URI, values);
+                    contentResolver.insert(Entry.CONTENT_URI, values);
                 }
 
-                contentResolver.notifyChange(Bulletin.CONTENT_URI, null);
+                contentResolver.notifyChange(Entry.CONTENT_URI, null);
             }
         } catch (FeedParserException exception) {
             Log.e(getClass().getName(), "Sync failed", exception);

@@ -2,4 +2,6 @@
 <resources>
     <color name="branding_blue">#2d99ce</color>
     <color name="branding_grey">#464648</color>
+
+    <color name="background">#fafafa</color>
 </resources>

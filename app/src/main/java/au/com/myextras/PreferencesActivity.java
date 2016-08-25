@@ -66,7 +66,7 @@ public class PreferencesActivity extends AppCompatActivity {
                             .apply();
 
                     Context context = preference.getContext();
-                    context.getContentResolver().notifyChange(Bulletin.CONTENT_URI, null);
+                    context.getContentResolver().notifyChange(Entry.CONTENT_URI, null);
                     context.startService(new Intent(context, SyncService.class));
 
                     break;

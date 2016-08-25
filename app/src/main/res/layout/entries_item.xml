@@ -19,7 +19,7 @@
             android:id="@+id/title"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:textAppearance="@style/TextAppearance.BulletinTitle" />
+            android:textAppearance="@style/TextAppearance.EntryTitle" />
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -31,14 +31,14 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:textAppearance="@style/TextAppearance.BulletinDate" />
+                android:textAppearance="@style/TextAppearance.EntryDate" />
 
             <TextView
                 android:id="@+id/important"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="@string/star"
-                android:textAppearance="@style/TextAppearance.BulletinDate"
+                android:textAppearance="@style/TextAppearance.EntryDate"
                 android:textColor="@color/branding_blue"
                 android:visibility="gone" />
 

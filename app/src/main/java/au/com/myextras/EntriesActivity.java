@@ -23,26 +23,26 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
-public class BulletinsActivity extends AppCompatActivity implements LoaderManager.LoaderCallbacks<Cursor> {
+public class EntriesActivity extends AppCompatActivity implements LoaderManager.LoaderCallbacks<Cursor> {
 
-    private static final int LOADER_BULLETINS = 1;
-    private static final int LOADER_NEW_BULLETINS = 2;
+    private static final int LOADER_ENTRIES = 1;
+    private static final int LOADER_NEW_ENTRIES = 2;
 
-    private static final String[] BULLETIN_PROJECTION = {
-            Bulletin.Column.ID,
-            Bulletin.Column.TITLE,
-            Bulletin.Column.PUBLISHED,
-            Bulletin.Column.ACCESSED,
-            Bulletin.Column.IMPORTANT,
+    private static final String[] ENTRY_PROJECTION = {
+            Entry.Columns.ID,
+            Entry.Columns.TITLE,
+            Entry.Columns.PUBLISHED,
+            Entry.Columns.ACCESSED,
+            Entry.Columns.IMPORTANT,
     };
-    private static final String BULLETIN_SORT_ORDER = Bulletin.Column.PUBLISHED + " DESC";
-    private static final int BULLETIN_ID = 0;
-    private static final int BULLETIN_TITLE = 1;
-    private static final int BULLETIN_PUBLISHED = 2;
-    private static final int BULLETIN_ACCESSED = 3;
-    private static final int BULLETIN_IMPORTANT = 4;
+    private static final String ENTRY_SORT_ORDER = Entry.Columns.PUBLISHED + " DESC";
+    private static final int ENTRY_ID = 0;
+    private static final int ENTRY_TITLE = 1;
+    private static final int ENTRY_PUBLISHED = 2;
+    private static final int ENTRY_ACCESSED = 3;
+    private static final int ENTRY_IMPORTANT = 4;
 
-    private BulletinAdapter adapter;
+    private EntriesAdapter adapter;
 
     private View doneAllButton;
 
@@ -50,9 +50,9 @@ public class BulletinsActivity extends AppCompatActivity implements LoaderManage
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        setContentView(R.layout.bulletins_activity);
+        setContentView(R.layout.entries);
 
-        RecyclerView recyclerView = (RecyclerView) findViewById(R.id.bulletins);
+        RecyclerView recyclerView = (RecyclerView) findViewById(R.id.entries);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
         recyclerView.addItemDecoration(new RecyclerView.ItemDecoration() {
             final int spacing = getResources().getDimensionPixelSize(R.dimen.grid_spacing);
@@ -64,7 +64,7 @@ public class BulletinsActivity extends AppCompatActivity implements LoaderManage
                 outRect.set(spacing, position == 0 ? spacing : 0, spacing, spacing);
             }
         });
-        recyclerView.setAdapter(adapter = new BulletinAdapter(this));
+        recyclerView.setAdapter(adapter = new EntriesAdapter(this));
 
         doneAllButton = findViewById(R.id.done_all);
         doneAllButton.setOnClickListener(new View.OnClickListener() {
@@ -75,7 +75,7 @@ public class BulletinsActivity extends AppCompatActivity implements LoaderManage
                     protected Boolean doInBackground(Object... params) {
                         ContentResolver contentResolver = (ContentResolver) params[0];
 
-                        contentResolver.update(Bulletin.CONTENT_URI, null, null, null);
+                        contentResolver.update(Entry.CONTENT_URI, null, null, null);
 
                         return Boolean.TRUE;
                     }
@@ -84,13 +84,13 @@ public class BulletinsActivity extends AppCompatActivity implements LoaderManage
         });
 
         LoaderManager loaderManager = getSupportLoaderManager();
-        loaderManager.initLoader(LOADER_BULLETINS, null, this);
-        loaderManager.initLoader(LOADER_NEW_BULLETINS, null, this);
+        loaderManager.initLoader(LOADER_ENTRIES, null, this);
+        loaderManager.initLoader(LOADER_NEW_ENTRIES, null, this);
     }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        getMenuInflater().inflate(R.menu.bulletins_activity, menu);
+        getMenuInflater().inflate(R.menu.entries, menu);
 
         return true;
     }
@@ -109,10 +109,10 @@ public class BulletinsActivity extends AppCompatActivity implements LoaderManage
     @Override
     public Loader<Cursor> onCreateLoader(int id, Bundle args) {
         switch (id) {
-            case LOADER_BULLETINS:
-                return new CursorLoader(this, Bulletin.CONTENT_URI, BULLETIN_PROJECTION, null, null, BULLETIN_SORT_ORDER);
-            case LOADER_NEW_BULLETINS:
-                return new CursorLoader(this, Bulletin.CONTENT_URI, BULLETIN_PROJECTION, Bulletin.Column.PUBLISHED + " != " + Bulletin.Column.ACCESSED, null, null);
+            case LOADER_ENTRIES:
+                return new CursorLoader(this, Entry.CONTENT_URI, ENTRY_PROJECTION, null, null, ENTRY_SORT_ORDER);
+            case LOADER_NEW_ENTRIES:
+                return new CursorLoader(this, Entry.CONTENT_URI, ENTRY_PROJECTION, Entry.Columns.PUBLISHED + " != " + Entry.Columns.ACCESSED, null, null);
         }
 
         throw new IllegalArgumentException("Unsupported loader: " + id);
@@ -121,7 +121,7 @@ public class BulletinsActivity extends AppCompatActivity implements LoaderManage
     @Override
     public void onLoadFinished(Loader<Cursor> loader, Cursor cursor) {
         switch (loader.getId()) {
-            case LOADER_BULLETINS:
+            case LOADER_ENTRIES:
                 ActionBar actionBar = getSupportActionBar();
                 if (actionBar != null) {
                     actionBar.setSubtitle(Preferences.getTitle(this));
@@ -129,7 +129,7 @@ public class BulletinsActivity extends AppCompatActivity implements LoaderManage
 
                 adapter.setCursor(cursor);
                 break;
-            case LOADER_NEW_BULLETINS:
+            case LOADER_NEW_ENTRIES:
                 doneAllButton.setVisibility(cursor.getCount() == 0 ? View.INVISIBLE : View.VISIBLE);
                 break;
         }
@@ -138,35 +138,44 @@ public class BulletinsActivity extends AppCompatActivity implements LoaderManage
     @Override
     public void onLoaderReset(Loader<Cursor> loader) {
         switch (loader.getId()) {
-            case LOADER_BULLETINS:
+            case LOADER_ENTRIES:
                 adapter.setCursor(null);
                 break;
         }
     }
 
-    private class BulletinViewHolder extends RecyclerView.ViewHolder {
+    private class EntryViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
 
         final TextView titleTextView;
         final TextView dateTextView;
         final View importantView;
 
-        public BulletinViewHolder(View itemView) {
+        public EntryViewHolder(View itemView) {
             super(itemView);
 
             titleTextView = (TextView) itemView.findViewById(R.id.title);
             dateTextView = (TextView) itemView.findViewById(R.id.date);
             importantView = itemView.findViewById(R.id.important);
+
+            itemView.setOnClickListener(this);
+        }
+
+        @Override
+        public void onClick(View view) {
+            Intent intent = new Intent(EntriesActivity.this, ReaderActivity.class)
+                    .putExtra(ReaderActivity.EXTRA_CURSOR_POSITION, getAdapterPosition());
+            startActivity(intent);
         }
 
     }
 
-    private class BulletinAdapter extends RecyclerView.Adapter<BulletinViewHolder> {
+    private class EntriesAdapter extends RecyclerView.Adapter<EntryViewHolder> {
 
         private Context context;
 
         private Cursor cursor;
 
-        public BulletinAdapter(Context context) {
+        public EntriesAdapter(Context context) {
             this.context = context;
 
             setHasStableIds(true);
@@ -179,26 +188,26 @@ public class BulletinsActivity extends AppCompatActivity implements LoaderManage
         }
 
         @Override
-        public BulletinViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
-            View itemView = getLayoutInflater().inflate(R.layout.bulletin_item, parent, false);
-            return new BulletinViewHolder(itemView);
+        public EntryViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+            View itemView = getLayoutInflater().inflate(R.layout.entries_item, parent, false);
+            return new EntryViewHolder(itemView);
         }
 
         @Override
-        public void onBindViewHolder(BulletinViewHolder holder, int position) {
+        public void onBindViewHolder(EntryViewHolder holder, int position) {
             cursor.moveToPosition(position);
 
-            holder.titleTextView.setText(cursor.getString(BULLETIN_TITLE));
-            holder.titleTextView.setTypeface(cursor.getLong(BULLETIN_PUBLISHED) != cursor.getLong(BULLETIN_ACCESSED) ? Typeface.DEFAULT_BOLD : Typeface.DEFAULT);
-            holder.dateTextView.setText(getString(R.string.last_update, DateUtils.formatDateTime(context, cursor.getLong(BULLETIN_PUBLISHED), DateUtils.FORMAT_NUMERIC_DATE | DateUtils.FORMAT_SHOW_DATE | DateUtils.FORMAT_SHOW_YEAR | DateUtils.FORMAT_SHOW_TIME)));
-            holder.importantView.setVisibility(cursor.getInt(BULLETIN_IMPORTANT) != 0 ? View.VISIBLE : View.GONE);
+            holder.titleTextView.setText(cursor.getString(ENTRY_TITLE));
+            holder.titleTextView.setTypeface(cursor.getLong(ENTRY_PUBLISHED) != cursor.getLong(ENTRY_ACCESSED) ? Typeface.DEFAULT_BOLD : Typeface.DEFAULT);
+            holder.dateTextView.setText(getString(R.string.last_update, DateUtils.formatDateTime(context, cursor.getLong(ENTRY_PUBLISHED), DateUtils.FORMAT_NUMERIC_DATE | DateUtils.FORMAT_SHOW_DATE | DateUtils.FORMAT_SHOW_YEAR | DateUtils.FORMAT_SHOW_TIME)));
+            holder.importantView.setVisibility(cursor.getInt(ENTRY_IMPORTANT) != 0 ? View.VISIBLE : View.GONE);
         }
 
         @Override
         public long getItemId(int position) {
             cursor.moveToPosition(position);
 
-            return cursor.getLong(BULLETIN_ID);
+            return cursor.getLong(ENTRY_ID);
         }
 
         @Override
