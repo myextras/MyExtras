@@ -200,7 +200,7 @@ public class ReaderEntryFragment extends Fragment {
     private String prepareContent() {
         return entryHtml
                 .replace("{{ reader.theme }}", "light")
-                .replace("{{ entry.link }}", nullSafe("", entryLink))
+                .replace("{{ entry.link }}", nullSafe(entryLink, ""))
                 .replace("{{ entry.date }}", DateUtils.formatDateTime(getActivity(), entryPublished, DATE_FORMAT))
                 .replace("{{ entry.title }}", nullSafe(entryTitle, entryTitle))
                 .replace("{{ entry.content }}", nullSafe(entryContent, entryContent));
