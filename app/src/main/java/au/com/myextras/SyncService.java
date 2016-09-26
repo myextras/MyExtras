@@ -8,8 +8,10 @@ import android.app.job.JobScheduler;
 import android.content.ComponentName;
 import android.content.ContentResolver;
 import android.content.ContentValues;
+import android.content.Context;
 import android.content.Intent;
 import android.os.Build;
+import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 
 import java.util.Calendar;
@@ -20,15 +22,55 @@ import au.com.myextras.rss.FeedParserException;
 
 public class SyncService extends IntentService {
 
+    private static final String ACTION_SYNC_REQUESTED = BuildConfig.APPLICATION_ID + "intent.action.SYNC_REQUESTED";
+    private static final String ACTION_SYNC_STATUS = BuildConfig.APPLICATION_ID + "intent.action.SYNC_STATUS";
+
+    public static final String ACTION_SYNC_STARTED = BuildConfig.APPLICATION_ID + "intent.action.SYNC_STARTED";
+    public static final String ACTION_SYNC_FINISHED = BuildConfig.APPLICATION_ID + "intent.action.SYNC_FINISHED";
+    public static final String ACTION_SYNC_FAILED = BuildConfig.APPLICATION_ID + "intent.action.SYNC_FAILED";
+
+    private boolean syncing;
+
     public SyncService() {
         super(SyncService.class.getSimpleName());
     }
 
+    public static void requestSync(Context context) {
+        Intent intent = new Intent(context, SyncService.class);
+        intent.setAction(ACTION_SYNC_REQUESTED);
+        context.startService(intent);
+    }
+
+    public static void requestStatus(Context context) {
+        Intent intent = new Intent(context, SyncService.class);
+        intent.setAction(ACTION_SYNC_STATUS);
+        context.startService(intent);
+    }
+
+    @Override
+    public int onStartCommand(Intent intent, int flags, int startId) {
+        if (ACTION_SYNC_STATUS.equals(intent.getAction())) {
+            LocalBroadcastManager.getInstance(this)
+                    .sendBroadcast(new Intent(syncing ? ACTION_SYNC_STARTED : ACTION_SYNC_FINISHED));
+        }
+
+        return super.onStartCommand(intent, flags, startId);
+    }
+
     @Override
     protected void onHandleIntent(Intent intent) {
+        if (!ACTION_SYNC_REQUESTED.equals(intent.getAction())) {
+            return;
+        }
+
         Log.i(getClass().getName(), "Syncing");
 
         try {
+            syncing = true;
+
+            LocalBroadcastManager.getInstance(this)
+                    .sendBroadcast(new Intent(ACTION_SYNC_STARTED));
+
             String code = Preferences.getCode(this);
             FeedParser.Result result = FeedParser.parse("https://www.myextras.com.au/rssb/" + code);
 
@@ -54,6 +96,15 @@ public class SyncService extends IntentService {
             }
         } catch (FeedParserException exception) {
             Log.e(getClass().getName(), "Sync failed", exception);
+
+            LocalBroadcastManager.getInstance(this)
+                    .sendBroadcast(new Intent(ACTION_SYNC_FAILED));
+        } finally {
+            syncing = false;
+
+            LocalBroadcastManager.getInstance(this)
+                    .sendBroadcast(new Intent(ACTION_SYNC_FINISHED));
+
         }
 
         scheduleNextSync();
@@ -123,7 +174,8 @@ public class SyncService extends IntentService {
         Log.d(getClass().getName(), "Next sync: " + nextSyncDate);
 
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
-            Intent intent = new Intent(this, SyncService.class);
+            Intent intent = new Intent(this, SyncService.class)
+                    .setAction(SyncService.ACTION_SYNC_REQUESTED);
             PendingIntent pendingIntent = PendingIntent.getService(this, 0, intent, 0);
 
             AlarmManager alarmManager = (AlarmManager) getSystemService(ALARM_SERVICE);

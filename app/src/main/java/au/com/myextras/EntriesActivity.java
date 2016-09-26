@@ -1,8 +1,10 @@
 package au.com.myextras;
 
+import android.content.BroadcastReceiver;
 import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.database.Cursor;
 import android.graphics.Rect;
 import android.graphics.Typeface;
@@ -12,6 +14,8 @@ import android.support.annotation.Nullable;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
+import android.support.v4.content.LocalBroadcastManager;
+import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
@@ -23,7 +27,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
-public class EntriesActivity extends AppCompatActivity implements LoaderManager.LoaderCallbacks<Cursor> {
+public class EntriesActivity extends AppCompatActivity implements LoaderManager.LoaderCallbacks<Cursor>, SwipeRefreshLayout.OnRefreshListener {
 
     private static final int LOADER_ENTRIES = 1;
     private static final int LOADER_NEW_ENTRIES = 2;
@@ -44,7 +48,24 @@ public class EntriesActivity extends AppCompatActivity implements LoaderManager.
 
     private EntriesAdapter adapter;
 
+    private SwipeRefreshLayout swipeRefreshLayout;
     private View doneAllButton;
+
+    private LocalBroadcastManager localBroadcastManager;
+
+    private BroadcastReceiver syncReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            switch (intent.getAction()) {
+                case SyncService.ACTION_SYNC_STARTED:
+                    swipeRefreshLayout.setRefreshing(true);
+                    break;
+                case SyncService.ACTION_SYNC_FINISHED:
+                    swipeRefreshLayout.setRefreshing(false);
+                    break;
+            }
+        }
+    };
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -52,7 +73,13 @@ public class EntriesActivity extends AppCompatActivity implements LoaderManager.
 
         setContentView(R.layout.entries);
 
-        RecyclerView recyclerView = (RecyclerView) findViewById(R.id.entries);
+        localBroadcastManager = LocalBroadcastManager.getInstance(this);
+
+        swipeRefreshLayout = (SwipeRefreshLayout) findViewById(R.id.refresh);
+        swipeRefreshLayout.setColorSchemeResources(R.color.branding_blue);
+        swipeRefreshLayout.setOnRefreshListener(this);
+
+        RecyclerView recyclerView = (RecyclerView) swipeRefreshLayout.findViewById(R.id.entries);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
         recyclerView.addItemDecoration(new RecyclerView.ItemDecoration() {
             final int spacing = getResources().getDimensionPixelSize(R.dimen.grid_spacing);
@@ -86,6 +113,26 @@ public class EntriesActivity extends AppCompatActivity implements LoaderManager.
         LoaderManager loaderManager = getSupportLoaderManager();
         loaderManager.initLoader(LOADER_ENTRIES, null, this);
         loaderManager.initLoader(LOADER_NEW_ENTRIES, null, this);
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+
+        IntentFilter syncReceiverFilter = new IntentFilter();
+        syncReceiverFilter.addAction(SyncService.ACTION_SYNC_STARTED);
+        syncReceiverFilter.addAction(SyncService.ACTION_SYNC_FINISHED);
+        syncReceiverFilter.addAction(SyncService.ACTION_SYNC_FAILED);
+        localBroadcastManager.registerReceiver(syncReceiver, syncReceiverFilter);
+
+        SyncService.requestStatus(this);
+    }
+
+    @Override
+    protected void onPause() {
+        localBroadcastManager.unregisterReceiver(syncReceiver);
+
+        super.onPause();
     }
 
     @Override
@@ -142,6 +189,11 @@ public class EntriesActivity extends AppCompatActivity implements LoaderManager.
                 adapter.setCursor(null);
                 break;
         }
+    }
+
+    @Override
+    public void onRefresh() {
+        SyncService.requestSync(this);
     }
 
     private class EntryViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {

@@ -3,7 +3,6 @@ package au.com.myextras;
 import android.app.Fragment;
 import android.app.FragmentManager;
 import android.content.Context;
-import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.preference.Preference;
@@ -67,7 +66,7 @@ public class PreferencesActivity extends AppCompatActivity {
 
                     Context context = preference.getContext();
                     context.getContentResolver().notifyChange(Entry.CONTENT_URI, null);
-                    context.startService(new Intent(context, SyncService.class));
+                    SyncService.requestSync(context);
 
                     break;
             }

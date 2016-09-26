@@ -13,7 +13,7 @@ public class SyncReceiver extends BroadcastReceiver {
             Log.d(getClass().getName(), intent.getAction() + " received");
         }
 
-        context.startService(new Intent(context, SyncService.class));
+        SyncService.requestSync(context);
     }
 
 }
