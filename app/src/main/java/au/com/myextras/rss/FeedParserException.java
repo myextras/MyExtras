@@ -9,4 +9,8 @@ public class FeedParserException extends Exception {
         super(message, cause);
     }
 
+    public FeedParserException(String message) {
+        super(message);
+    }
+
 }

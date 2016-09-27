@@ -11,6 +11,7 @@ import android.graphics.Typeface;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
+import android.support.design.widget.Snackbar;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
@@ -62,6 +63,10 @@ public class EntriesActivity extends AppCompatActivity implements LoaderManager.
                     break;
                 case SyncService.ACTION_SYNC_FINISHED:
                     swipeRefreshLayout.setRefreshing(false);
+                    break;
+                case SyncService.ACTION_SYNC_FAILED:
+                    Snackbar.make(swipeRefreshLayout, R.string.sync_failed, Snackbar.LENGTH_SHORT)
+                            .show();
                     break;
             }
         }

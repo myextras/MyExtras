@@ -5,7 +5,7 @@
         <item name="colorPrimary">@color/branding_blue</item>
         <item name="colorPrimaryDark">@color/branding_grey</item>
         <item name="colorAccent">@color/branding_blue</item>
-        <item name="android:textColor">@color/branding_grey</item>
+        <item name="android:textColorPrimary">@color/branding_grey</item>
     </style>
 
     <style name="LauncherTheme" parent="Theme.AppCompat.NoActionBar">
