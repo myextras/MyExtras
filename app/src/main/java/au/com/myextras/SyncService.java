@@ -17,6 +17,8 @@ import android.util.Log;
 import java.util.Calendar;
 import java.util.Date;
 
+import javax.net.ssl.HttpsURLConnection;
+
 import au.com.myextras.rss.FeedParser;
 import au.com.myextras.rss.FeedParserException;
 
@@ -49,9 +51,16 @@ public class SyncService extends IntentService {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        if (ACTION_SYNC_STATUS.equals(intent.getAction())) {
+        String action = intent != null ? intent.getAction() : null;
+
+        if (ACTION_SYNC_STATUS.equals(action)) {
             LocalBroadcastManager.getInstance(this)
                     .sendBroadcast(new Intent(syncing ? ACTION_SYNC_STARTED : ACTION_SYNC_FINISHED));
+        }
+
+        if (!ACTION_SYNC_REQUESTED.equals(action) || syncing) {
+            // ignore intent
+            intent = null;
         }
 
         return super.onStartCommand(intent, flags, startId);
@@ -59,7 +68,7 @@ public class SyncService extends IntentService {
 
     @Override
     protected void onHandleIntent(Intent intent) {
-        if (!ACTION_SYNC_REQUESTED.equals(intent.getAction())) {
+        if (intent == null) {
             return;
         }
 
@@ -73,6 +82,10 @@ public class SyncService extends IntentService {
 
             String code = Preferences.getCode(this);
             FeedParser.Result result = FeedParser.parse("https://www.myextras.com.au/rssb/" + code);
+
+            if (result.status != HttpsURLConnection.HTTP_OK) {
+                throw new FeedParserException("Unexpected status: " + result.status);
+            }
 
             if (result.feed.title != null) {
                 ContentResolver contentResolver = getContentResolver();
