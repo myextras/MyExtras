@@ -1,15 +1,22 @@
 package au.com.myextras;
 
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.database.Cursor;
 import android.os.Bundle;
+import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentStatePagerAdapter;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
+import android.support.v4.content.LocalBroadcastManager;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
+import android.view.Menu;
+import android.view.MenuItem;
 
 public class ReaderActivity extends AppCompatActivity implements LoaderManager.LoaderCallbacks<Cursor>, ViewPager.OnPageChangeListener {
 
@@ -37,11 +44,42 @@ public class ReaderActivity extends AppCompatActivity implements LoaderManager.L
 
     private Intent resultData;
 
+    private MenuItem refreshMenuItem;
+
+    private LocalBroadcastManager localBroadcastManager;
+
+    private boolean syncing;
+    private BroadcastReceiver syncReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            switch (intent.getAction()) {
+                case SyncService.ACTION_SYNC_STARTED:
+                    syncing = true;
+                    if (refreshMenuItem != null) {
+                        refreshMenuItem.setActionView(R.layout.refresh_action);
+                    }
+                    break;
+                case SyncService.ACTION_SYNC_FINISHED:
+                    syncing = false;
+                    if (refreshMenuItem != null) {
+                        refreshMenuItem.setActionView(null);
+                    }
+                    break;
+                case SyncService.ACTION_SYNC_FAILED:
+                    Snackbar.make(pager, R.string.sync_failed, Snackbar.LENGTH_SHORT)
+                            .show();
+                    break;
+            }
+        }
+    };
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
         setContentView(R.layout.reader);
+
+        localBroadcastManager = LocalBroadcastManager.getInstance(this);
 
         pager = (ViewPager) findViewById(R.id.pager);
         assert pager != null;
@@ -61,10 +99,53 @@ public class ReaderActivity extends AppCompatActivity implements LoaderManager.L
     }
 
     @Override
+    protected void onResume() {
+        super.onResume();
+
+        IntentFilter syncReceiverFilter = new IntentFilter();
+        syncReceiverFilter.addAction(SyncService.ACTION_SYNC_STARTED);
+        syncReceiverFilter.addAction(SyncService.ACTION_SYNC_FINISHED);
+        syncReceiverFilter.addAction(SyncService.ACTION_SYNC_FAILED);
+        localBroadcastManager.registerReceiver(syncReceiver, syncReceiverFilter);
+
+        SyncService.requestStatus(this);
+    }
+
+    @Override
+    protected void onPause() {
+        localBroadcastManager.unregisterReceiver(syncReceiver);
+
+        super.onPause();
+    }
+
+    @Override
     protected void onSaveInstanceState(Bundle outState) {
         outState.putInt(EXTRA_CURSOR_POSITION, resultData.getIntExtra(EXTRA_CURSOR_POSITION, 0));
 
         super.onSaveInstanceState(outState);
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.reader, menu);
+
+        refreshMenuItem = menu.findItem(R.id.refresh);
+        if (syncing) {
+            refreshMenuItem.setActionView(R.layout.refresh_action);
+        }
+
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case R.id.refresh:
+                SyncService.requestSync(this);
+                return true;
+        }
+
+        return super.onOptionsItemSelected(item);
     }
 
     @Override

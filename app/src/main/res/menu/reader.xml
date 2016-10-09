@@ -8,10 +8,4 @@
         android:title="@string/refresh"
         support:showAsAction="ifRoom|withText" />
 
-    <item
-        android:id="@+id/settings"
-        android:icon="@drawable/ic_action_settings"
-        android:title="@string/settings"
-        support:showAsAction="ifRoom" />
-
 </menu>

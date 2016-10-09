@@ -16,7 +16,6 @@ import android.support.v4.app.LoaderManager;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
 import android.support.v4.content.LocalBroadcastManager;
-import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
@@ -28,7 +27,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
-public class EntriesActivity extends AppCompatActivity implements LoaderManager.LoaderCallbacks<Cursor>, SwipeRefreshLayout.OnRefreshListener {
+public class EntriesActivity extends AppCompatActivity implements LoaderManager.LoaderCallbacks<Cursor> {
 
     private static final int LOADER_ENTRIES = 1;
     private static final int LOADER_NEW_ENTRIES = 2;
@@ -49,23 +48,32 @@ public class EntriesActivity extends AppCompatActivity implements LoaderManager.
 
     private EntriesAdapter adapter;
 
-    private SwipeRefreshLayout swipeRefreshLayout;
+    private RecyclerView recyclerView;
     private View doneAllButton;
+
+    private MenuItem refreshMenuItem;
 
     private LocalBroadcastManager localBroadcastManager;
 
+    private boolean syncing;
     private BroadcastReceiver syncReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
             switch (intent.getAction()) {
                 case SyncService.ACTION_SYNC_STARTED:
-                    swipeRefreshLayout.setRefreshing(true);
+                    syncing = true;
+                    if (refreshMenuItem != null) {
+                        refreshMenuItem.setActionView(R.layout.refresh_action);
+                    }
                     break;
                 case SyncService.ACTION_SYNC_FINISHED:
-                    swipeRefreshLayout.setRefreshing(false);
+                    syncing = false;
+                    if (refreshMenuItem != null) {
+                        refreshMenuItem.setActionView(null);
+                    }
                     break;
                 case SyncService.ACTION_SYNC_FAILED:
-                    Snackbar.make(swipeRefreshLayout, R.string.sync_failed, Snackbar.LENGTH_SHORT)
+                    Snackbar.make(recyclerView, R.string.sync_failed, Snackbar.LENGTH_SHORT)
                             .show();
                     break;
             }
@@ -80,11 +88,7 @@ public class EntriesActivity extends AppCompatActivity implements LoaderManager.
 
         localBroadcastManager = LocalBroadcastManager.getInstance(this);
 
-        swipeRefreshLayout = (SwipeRefreshLayout) findViewById(R.id.refresh);
-        swipeRefreshLayout.setColorSchemeResources(R.color.branding_blue);
-        swipeRefreshLayout.setOnRefreshListener(this);
-
-        RecyclerView recyclerView = (RecyclerView) swipeRefreshLayout.findViewById(R.id.entries);
+        recyclerView = (RecyclerView) findViewById(R.id.entries);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
         recyclerView.addItemDecoration(new RecyclerView.ItemDecoration() {
             final int spacing = getResources().getDimensionPixelSize(R.dimen.grid_spacing);
@@ -144,12 +148,20 @@ public class EntriesActivity extends AppCompatActivity implements LoaderManager.
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.entries, menu);
 
+        refreshMenuItem = menu.findItem(R.id.refresh);
+        if (syncing) {
+            refreshMenuItem.setActionView(R.layout.refresh_action);
+        }
+
         return true;
     }
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
+            case R.id.refresh:
+                SyncService.requestSync(this);
+                return true;
             case R.id.settings:
                 startActivity(new Intent(this, PreferencesActivity.class));
                 return true;
@@ -194,11 +206,6 @@ public class EntriesActivity extends AppCompatActivity implements LoaderManager.
                 adapter.setCursor(null);
                 break;
         }
-    }
-
-    @Override
-    public void onRefresh() {
-        SyncService.requestSync(this);
     }
 
     private class EntryViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
