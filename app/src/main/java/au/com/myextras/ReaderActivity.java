@@ -86,7 +86,7 @@ public class ReaderActivity extends AppCompatActivity implements LoaderManager.L
         final String hintProperty = "show_swipe_hint";
         if (cursor.getCount() > 1 && preferences.getBoolean(hintProperty, true)) {
             Snackbar.make(pager, R.string.reader_swipe_hint, Snackbar.LENGTH_INDEFINITE)
-                    .setAction("Dismiss", new View.OnClickListener() {
+                    .setAction(R.string.dismiss, new View.OnClickListener() {
                         @Override
                         public void onClick(View view) {
                             preferences.edit()

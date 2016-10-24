@@ -5,6 +5,7 @@ import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.graphics.Rect;
 import android.graphics.Typeface;
@@ -118,6 +119,23 @@ public class EntriesActivity extends AppCompatActivity implements LoaderManager.
         LoaderManager loaderManager = getSupportLoaderManager();
         loaderManager.initLoader(LOADER_ENTRIES, null, this);
         loaderManager.initLoader(LOADER_NEW_ENTRIES, null, this);
+
+
+        final SharedPreferences preferences = getPreferences(MODE_PRIVATE);
+        final String hintProperty = "show_refresh_hint";
+        if (preferences.getBoolean(hintProperty, true)) {
+            Snackbar.make(swipeRefreshLayout, R.string.entries_swipe_hint, Snackbar.LENGTH_INDEFINITE)
+                    .setAction(R.string.dismiss, new View.OnClickListener() {
+                        @Override
+                        public void onClick(View view) {
+                            preferences.edit()
+                                    .putBoolean(hintProperty, false)
+                                    .apply();
+                        }
+                    })
+                    .show();
+        }
+
     }
 
     @Override
