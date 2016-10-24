@@ -24,7 +24,7 @@ public class PreferencesActivity extends AppCompatActivity {
         }
     }
 
-    public static class PreferencesFragment extends PreferenceFragment implements SharedPreferences.OnSharedPreferenceChangeListener {
+    public static class PreferencesFragment extends PreferenceFragment implements Preference.OnPreferenceChangeListener {
 
         private SharedPreferences preferences;
 
@@ -36,29 +36,24 @@ public class PreferencesActivity extends AppCompatActivity {
 
             preferences = getPreferenceManager().getSharedPreferences();
 
-            onSharedPreferenceChanged(preferences, Preferences.CODE);
+            Preference codePreference = findPreference(Preferences.CODE);
+            codePreference.setSummary(preferences.getString(Preferences.CODE, null));
+            codePreference.setOnPreferenceChangeListener(this);
+
+            Preference versionPreference = findPreference("version");
+            versionPreference.setSummary(BuildConfig.VERSION_NAME);
         }
 
         @Override
-        public void onStart() {
-            super.onStart();
-
-            preferences.registerOnSharedPreferenceChangeListener(this);
-        }
-
-        @Override
-        public void onStop() {
-            preferences.unregisterOnSharedPreferenceChangeListener(this);
-
-            super.onStop();
-        }
-
-        @Override
-        public void onSharedPreferenceChanged(SharedPreferences preferences, String key) {
-            switch (key) {
+        public boolean onPreferenceChange(Preference preference, Object newValue) {
+            switch (preference.getKey()) {
                 case Preferences.CODE:
-                    Preference preference = findPreference(Preferences.CODE);
-                    preference.setSummary(preferences.getString(Preferences.CODE, null));
+                    String oldValue = preferences.getString(Preferences.CODE, null);
+                    if (oldValue != null && oldValue.equals(newValue)) {
+                        return false;
+                    }
+
+                    preference.setSummary(newValue.toString());
 
                     preferences.edit()
                             .remove(Preferences.TITLE)
@@ -70,6 +65,8 @@ public class PreferencesActivity extends AppCompatActivity {
 
                     break;
             }
+
+            return true;
         }
 
     }

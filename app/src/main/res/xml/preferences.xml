@@ -4,4 +4,8 @@
         android:inputType="text|textCapCharacters|textNoSuggestions"
         android:key="code"
         android:title="@string/bulletin_code" />
+    <Preference
+        android:enabled="false"
+        android:key="version"
+        android:title="@string/version" />
 </PreferenceScreen>
