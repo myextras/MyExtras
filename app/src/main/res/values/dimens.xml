@@ -2,5 +2,6 @@
 <resources>
     <dimen name="grid_spacing">8dp</dimen>
     <dimen name="reader_pager_margin">4dp</dimen>
+    <dimen name="fab_size">56dp</dimen>
     <dimen name="fab_margin">16dp</dimen>
 </resources>

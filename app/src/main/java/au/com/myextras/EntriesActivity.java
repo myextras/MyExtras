@@ -89,12 +89,14 @@ public class EntriesActivity extends AppCompatActivity implements LoaderManager.
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
         recyclerView.addItemDecoration(new RecyclerView.ItemDecoration() {
             final int spacing = getResources().getDimensionPixelSize(R.dimen.grid_spacing);
+            final int bottomPadding = getResources().getDimensionPixelSize(R.dimen.fab_size) + getResources().getDimensionPixelSize(R.dimen.fab_margin) * 2;
 
             @Override
             public void getItemOffsets(Rect outRect, View view, RecyclerView parent, RecyclerView.State state) {
                 int position = parent.getChildAdapterPosition(view);
+                int lastPosition = parent.getAdapter().getItemCount() - 1;
 
-                outRect.set(spacing, position == 0 ? spacing : 0, spacing, spacing);
+                outRect.set(spacing, position == 0 ? spacing : 0, spacing, position == lastPosition ? bottomPadding : spacing);
             }
         });
         recyclerView.setAdapter(adapter = new EntriesAdapter(this));
