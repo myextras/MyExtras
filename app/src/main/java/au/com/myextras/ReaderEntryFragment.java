@@ -36,6 +36,8 @@ public class ReaderEntryFragment extends Fragment {
 
     private static String entryHtml;
 
+    private int cursorPosition;
+
     private DataSetObserver dataSetObserver;
 
     private long entryId;
@@ -84,7 +86,8 @@ public class ReaderEntryFragment extends Fragment {
     public void setUserVisibleHint(boolean isVisibleToUser) {
         super.setUserVisibleHint(isVisibleToUser);
 
-        if (entryId > 0) {
+        ReaderActivity readerActivity = (ReaderActivity) getActivity();
+        if (readerActivity != null && readerActivity.getActiveCursorPosition() == cursorPosition) {
             markAccessed();
         }
     }
@@ -108,6 +111,8 @@ public class ReaderEntryFragment extends Fragment {
             }
         }
 
+        cursorPosition = getArguments().getInt(ARG_CURSOR_POSITION);
+
         setHasOptionsMenu(true);
 
         final ReaderActivity activity = (ReaderActivity) getActivity();
@@ -116,7 +121,7 @@ public class ReaderEntryFragment extends Fragment {
             @Override
             public void onChanged() {
                 Cursor cursor = activity.cursor;
-                if (cursor.moveToPosition(getArguments().getInt(ARG_CURSOR_POSITION))) {
+                if (cursor.moveToPosition(cursorPosition)) {
                     entryId = cursor.getLong(ReaderActivity.ENTRY_ID);
                     String newEntryTitle = cursor.getString(ReaderActivity.ENTRY_TITLE);
                     String newEntryLink = cursor.getString(ReaderActivity.ENTRY_LINK);
@@ -145,7 +150,7 @@ public class ReaderEntryFragment extends Fragment {
                         activity.supportInvalidateOptionsMenu();
                     }
 
-                    if (getUserVisibleHint()) {
+                    if (getUserVisibleHint() && activity.getActiveCursorPosition() == cursorPosition) {
                         markAccessed();
                     }
                 }
@@ -211,7 +216,7 @@ public class ReaderEntryFragment extends Fragment {
     }
 
     private void markAccessed() {
-        if (entryAccessed != entryPublished) {
+        if (entryId > 0 && entryAccessed != entryPublished) {
             new SetEntryAccessedTask(getContext()).execute(entryId, entryPublished);
         }
     }

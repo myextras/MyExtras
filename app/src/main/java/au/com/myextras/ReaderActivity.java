@@ -119,6 +119,10 @@ public class ReaderActivity extends AppCompatActivity implements LoaderManager.L
         // nothing to do here
     }
 
+    protected int getActiveCursorPosition() {
+        return resultData.getIntExtra(EXTRA_CURSOR_POSITION, -1);
+    }
+
     protected class Adapter extends FragmentStatePagerAdapter {
 
         public Adapter() {
