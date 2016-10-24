@@ -18,11 +18,11 @@ import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
 import android.support.v4.content.LocalBroadcastManager;
 import android.support.v4.widget.SwipeRefreshLayout;
-import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.text.format.DateUtils;
+import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -192,11 +192,7 @@ public class EntriesActivity extends AppCompatActivity implements LoaderManager.
     public void onLoadFinished(Loader<Cursor> loader, Cursor cursor) {
         switch (loader.getId()) {
             case LOADER_ENTRIES:
-                ActionBar actionBar = getSupportActionBar();
-                if (actionBar != null) {
-                    actionBar.setSubtitle(Preferences.getTitle(this));
-                }
-
+                adapter.setHeader(Preferences.getTitle(this));
                 adapter.setCursor(cursor);
                 break;
             case LOADER_NEW_ENTRIES:
@@ -219,7 +215,27 @@ public class EntriesActivity extends AppCompatActivity implements LoaderManager.
         SyncService.requestSync(this);
     }
 
-    private class EntryViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
+    private abstract class ViewHolder extends RecyclerView.ViewHolder {
+
+        public ViewHolder(View itemView) {
+            super(itemView);
+        }
+
+    }
+
+    private class HeaderViewHolder extends ViewHolder {
+
+        final TextView titleTextView;
+
+        public HeaderViewHolder(View itemView) {
+            super(itemView);
+
+            titleTextView = (TextView) itemView.findViewById(R.id.title);
+        }
+
+    }
+
+    private class EntryViewHolder extends ViewHolder implements View.OnClickListener {
 
         final TextView titleTextView;
         final TextView dateTextView;
@@ -238,22 +254,30 @@ public class EntriesActivity extends AppCompatActivity implements LoaderManager.
         @Override
         public void onClick(View view) {
             Intent intent = new Intent(EntriesActivity.this, ReaderActivity.class)
-                    .putExtra(ReaderActivity.EXTRA_CURSOR_POSITION, getAdapterPosition());
+                    .putExtra(ReaderActivity.EXTRA_CURSOR_POSITION, getAdapterPosition() - 1);
             startActivity(intent);
         }
 
     }
 
-    private class EntriesAdapter extends RecyclerView.Adapter<EntryViewHolder> {
+    private class EntriesAdapter extends RecyclerView.Adapter<ViewHolder> {
+
+        private final int VIEW_TYPE_HEADER = 0;
+        private final int VIEW_TYPE_ENTRY = 1;
 
         private Context context;
 
+        private String header;
         private Cursor cursor;
 
         public EntriesAdapter(Context context) {
             this.context = context;
 
             setHasStableIds(true);
+        }
+
+        public void setHeader(String header) {
+            this.header = header;
         }
 
         public void setCursor(Cursor cursor) {
@@ -263,31 +287,53 @@ public class EntriesActivity extends AppCompatActivity implements LoaderManager.
         }
 
         @Override
-        public EntryViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
-            View itemView = getLayoutInflater().inflate(R.layout.entries_item, parent, false);
-            return new EntryViewHolder(itemView);
+        public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+            LayoutInflater layoutInflater = getLayoutInflater();
+            switch (viewType) {
+                case VIEW_TYPE_HEADER:
+                    return new HeaderViewHolder(layoutInflater.inflate(R.layout.entries_header, parent, false));
+                default:
+                    return new EntryViewHolder(layoutInflater.inflate(R.layout.entries_item, parent, false));
+            }
         }
 
         @Override
-        public void onBindViewHolder(EntryViewHolder holder, int position) {
-            cursor.moveToPosition(position);
+        public void onBindViewHolder(ViewHolder viewHolder, int position) {
+            if (position == 0) {
+                HeaderViewHolder headerViewHolder = (HeaderViewHolder) viewHolder;
 
-            holder.titleTextView.setText(cursor.getString(ENTRY_TITLE));
-            holder.titleTextView.setTypeface(cursor.getLong(ENTRY_PUBLISHED) != cursor.getLong(ENTRY_ACCESSED) ? Typeface.DEFAULT_BOLD : Typeface.DEFAULT);
-            holder.dateTextView.setText(getString(R.string.last_update, DateUtils.formatDateTime(context, cursor.getLong(ENTRY_PUBLISHED), DateUtils.FORMAT_NUMERIC_DATE | DateUtils.FORMAT_SHOW_DATE | DateUtils.FORMAT_SHOW_YEAR | DateUtils.FORMAT_SHOW_TIME)));
-            holder.importantView.setVisibility(cursor.getInt(ENTRY_IMPORTANT) != 0 ? View.VISIBLE : View.GONE);
+                headerViewHolder.titleTextView.setText(header);
+            } else {
+                EntryViewHolder entryViewHolder = (EntryViewHolder) viewHolder;
+
+                cursor.moveToPosition(position - 1);
+
+                entryViewHolder.titleTextView.setText(cursor.getString(ENTRY_TITLE));
+                entryViewHolder.titleTextView.setTypeface(cursor.getLong(ENTRY_PUBLISHED) != cursor.getLong(ENTRY_ACCESSED) ? Typeface.DEFAULT_BOLD : Typeface.DEFAULT);
+                entryViewHolder.dateTextView.setText(getString(R.string.last_update, DateUtils.formatDateTime(context, cursor.getLong(ENTRY_PUBLISHED), DateUtils.FORMAT_NUMERIC_DATE | DateUtils.FORMAT_SHOW_DATE | DateUtils.FORMAT_SHOW_YEAR | DateUtils.FORMAT_SHOW_TIME)));
+                entryViewHolder.importantView.setVisibility(cursor.getInt(ENTRY_IMPORTANT) != 0 ? View.VISIBLE : View.GONE);
+            }
+        }
+
+        @Override
+        public int getItemViewType(int position) {
+            return position == 0 ? VIEW_TYPE_HEADER : VIEW_TYPE_ENTRY;
         }
 
         @Override
         public long getItemId(int position) {
-            cursor.moveToPosition(position);
+            if (position == 0) {
+                return -1;
+            }
+
+            cursor.moveToPosition(position - 1);
 
             return cursor.getLong(ENTRY_ID);
         }
 
         @Override
         public int getItemCount() {
-            return cursor != null ? cursor.getCount() : 0;
+            return cursor != null ? cursor.getCount() + 1 : 0;
         }
 
     }
