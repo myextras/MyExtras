@@ -1,8 +1,10 @@
 package au.com.myextras;
 
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.os.Bundle;
+import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentStatePagerAdapter;
 import android.support.v4.app.LoaderManager;
@@ -10,6 +12,7 @@ import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
+import android.view.View;
 
 public class ReaderActivity extends AppCompatActivity implements LoaderManager.LoaderCallbacks<Cursor>, ViewPager.OnPageChangeListener {
 
@@ -78,6 +81,21 @@ public class ReaderActivity extends AppCompatActivity implements LoaderManager.L
         adapter.notifyDataSetChanged();
 
         pager.setCurrentItem(resultData.getIntExtra(EXTRA_CURSOR_POSITION, 0), false);
+
+        final SharedPreferences preferences = getPreferences(MODE_PRIVATE);
+        final String hintProperty = "show_swipe_hint";
+        if (cursor.getCount() > 1 && preferences.getBoolean(hintProperty, true)) {
+            Snackbar.make(pager, R.string.reader_swipe_hint, Snackbar.LENGTH_INDEFINITE)
+                    .setAction("Dismiss", new View.OnClickListener() {
+                        @Override
+                        public void onClick(View view) {
+                            preferences.edit()
+                                    .putBoolean(hintProperty, false)
+                                    .apply();
+                        }
+                    })
+                    .show();
+        }
     }
 
     @Override

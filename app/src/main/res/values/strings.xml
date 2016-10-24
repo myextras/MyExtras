@@ -7,4 +7,6 @@
     <string name="settings">Settings</string>
 
     <string name="sync_failed">Sync failed</string>
+
+    <string name="reader_swipe_hint">Swipe left and right to navigate between entries</string>
 </resources>
