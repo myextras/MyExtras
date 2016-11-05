@@ -7,6 +7,7 @@ public class Preferences {
 
     public static final String CODE = "code";
     public static final String TITLE = "title";
+    public static final String LAST_UPDATE = "last_update";
 
     public static String getCode(Context context) {
         return PreferenceManager.getDefaultSharedPreferences(context)
@@ -29,6 +30,18 @@ public class Preferences {
         PreferenceManager.getDefaultSharedPreferences(context)
                 .edit()
                 .putString(TITLE, title)
+                .apply();
+    }
+
+    public static long getLastUpdate(Context context) {
+        return PreferenceManager.getDefaultSharedPreferences(context)
+                .getLong(LAST_UPDATE, 0);
+    }
+
+    public static void setLastUpdate(Context context, long lastUpdate) {
+        PreferenceManager.getDefaultSharedPreferences(context)
+                .edit()
+                .putLong(LAST_UPDATE, lastUpdate)
                 .apply();
     }
 

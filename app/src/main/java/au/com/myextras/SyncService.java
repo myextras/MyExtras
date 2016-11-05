@@ -107,6 +107,8 @@ public class SyncService extends IntentService {
 
                 contentResolver.notifyChange(Entry.CONTENT_URI, null);
             }
+
+            Preferences.setLastUpdate(this, System.currentTimeMillis());
         } catch (FeedParserException exception) {
             Log.e(getClass().getName(), "Sync failed", exception);
 

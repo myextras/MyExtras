@@ -227,12 +227,16 @@ public class EntriesActivity extends AppCompatActivity implements LoaderManager.
 
     private class HeaderViewHolder extends ViewHolder {
 
-        final TextView titleTextView;
+        final TextView schoolTextView;
+        final TextView teacherTextView;
+        final TextView dateTextView;
 
         public HeaderViewHolder(View itemView) {
             super(itemView);
 
-            titleTextView = (TextView) itemView.findViewById(R.id.title);
+            schoolTextView = (TextView) itemView.findViewById(R.id.school);
+            teacherTextView = (TextView) itemView.findViewById(R.id.teacher);
+            dateTextView = (TextView) itemView.findViewById(R.id.date);
         }
 
     }
@@ -304,7 +308,18 @@ public class EntriesActivity extends AppCompatActivity implements LoaderManager.
             if (position == 0) {
                 HeaderViewHolder headerViewHolder = (HeaderViewHolder) viewHolder;
 
-                headerViewHolder.titleTextView.setText(header);
+                if (header != null) {
+                    String[] header = this.header.split("@");
+                    String school = header[0].trim();
+                    String teacher = header.length > 1 ? header[1].trim() : null;
+
+                    headerViewHolder.schoolTextView.setText(school);
+                    headerViewHolder.teacherTextView.setText(teacher);
+                    headerViewHolder.teacherTextView.setVisibility(teacher != null ? View.VISIBLE : View.GONE);
+                }
+
+                long lastUpdate = Preferences.getLastUpdate(context);
+                headerViewHolder.dateTextView.setText(getString(R.string.last_check, DateUtils.formatDateTime(context, lastUpdate, DateUtils.FORMAT_NUMERIC_DATE | DateUtils.FORMAT_SHOW_DATE | DateUtils.FORMAT_SHOW_YEAR | DateUtils.FORMAT_SHOW_TIME)));
             } else {
                 EntryViewHolder entryViewHolder = (EntryViewHolder) viewHolder;
 
