@@ -27,11 +27,14 @@
 
         <activity android:name=".EntriesActivity" />
 
-        <activity android:name=".ReaderActivity" />
+        <activity
+            android:name=".ReaderActivity"
+            android:parentActivityName=".EntriesActivity" />
 
         <activity
             android:name=".PreferencesActivity"
-            android:label="@string/settings" />
+            android:label="@string/settings"
+            android:parentActivityName=".EntriesActivity" />
 
         <service android:name=".SyncService" />
 
