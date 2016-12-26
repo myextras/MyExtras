@@ -11,6 +11,7 @@ import android.view.View;
 import android.view.inputmethod.EditorInfo;
 import android.widget.EditText;
 import android.widget.TextView;
+import android.widget.Toast;
 
 /**
  * Shows splash screen and initial configuration.
@@ -39,9 +40,7 @@ public class LauncherActivity extends AppCompatActivity implements View.OnClickL
             @Override
             public boolean onEditorAction(TextView view, int actionId, KeyEvent event) {
                 if (actionId == EditorInfo.IME_ACTION_DONE) {
-                    Preferences.setCode(view.getContext(), view.getText().toString());
-
-                    startMainActivity();
+                    onDone(view);
                 }
 
                 return false;
@@ -61,6 +60,18 @@ public class LauncherActivity extends AppCompatActivity implements View.OnClickL
         handler.sendEmptyMessageDelayed(0, firstLaunch ? SPLASH_TIME_LONG : SPLASH_TIME_SHORT);
     }
 
+    private void onDone(TextView view) {
+        String code = view.getText().toString().trim();
+        if (code.isEmpty()) {
+            Toast.makeText(view.getContext(), R.string.bulletin_code_missing, Toast.LENGTH_SHORT)
+                    .show();
+        } else {
+            Preferences.setCode(view.getContext(), code);
+
+            startMainActivity();
+        }
+    }
+
     private void onSplashTimeout() {
         firstLaunch = false;
 
@@ -74,9 +85,7 @@ public class LauncherActivity extends AppCompatActivity implements View.OnClickL
     @Override
     public void onClick(View view) {
         if (view == doneButton) {
-            Preferences.setCode(view.getContext(), codeEditText.getText().toString());
-
-            startMainActivity();
+            onDone(codeEditText);
         }
     }
 

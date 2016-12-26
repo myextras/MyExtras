@@ -3,6 +3,8 @@
     <string name="star" translatable="false">&#9733;</string>
 
     <string name="bulletin_code">Bulletin code</string>
+    <string name="bulletin_code_caps">BULLETIN CODE</string>
+    <string name="bulletin_code_missing">Please enter a bulletin code</string>
     <string name="last_check">Last check: %s</string>
     <string name="last_update">Last update: %s</string>
     <string name="pull_down_hint">Pull down to refresh</string>
