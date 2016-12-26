@@ -184,37 +184,40 @@ public class BulletinsProvider extends ContentProvider {
 
     @WorkerThread
     public void updateNotification(SQLiteDatabase database) {
-        String[] selectionArgs = { Preferences.getCode(context) };
-        Cursor cursor = database.query(TABLE_ENTRIES, NOTIFICATION_ENTRY_PROJECTION, NOTIFICATION_ENTRY_SELECTION, selectionArgs, null, null, NOTIFICATION_ENTRY_SORT_ORDER, "1");
+        String code = Preferences.getCode(context);
+        if (code != null) {
+            String[] selectionArgs = { code };
+            Cursor cursor = database.query(TABLE_ENTRIES, NOTIFICATION_ENTRY_PROJECTION, NOTIFICATION_ENTRY_SELECTION, selectionArgs, null, null, NOTIFICATION_ENTRY_SORT_ORDER, "1");
 
-        if (cursor != null) {
-            NotificationManager notificationManager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
+            if (cursor != null) {
+                NotificationManager notificationManager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
 
-            if (cursor.moveToFirst()
-                    && cursor.getLong(NOTIFICATION_ENTRY_PUBLISHED) != cursor.getLong(NOTIFICATION_ENTRY_ACCESSED)
-                    && cursor.getInt(NOTIFICATION_ENTRY_IMPORTANT) != 0) {
-                Uri uri = ContentUris.withAppendedId(Entry.CONTENT_URI, cursor.getLong(NOTIFICATION_ENTRY_ID));
+                if (cursor.moveToFirst()
+                        && cursor.getLong(NOTIFICATION_ENTRY_PUBLISHED) != cursor.getLong(NOTIFICATION_ENTRY_ACCESSED)
+                        && cursor.getInt(NOTIFICATION_ENTRY_IMPORTANT) != 0) {
+                    Uri uri = ContentUris.withAppendedId(Entry.CONTENT_URI, cursor.getLong(NOTIFICATION_ENTRY_ID));
 
-                Intent intent = new Intent(context, EntriesActivity.class);
-                intent.setData(uri);
-                PendingIntent pendingIntent = PendingIntent.getActivity(context, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
+                    Intent intent = new Intent(context, EntriesActivity.class);
+                    intent.setData(uri);
+                    PendingIntent pendingIntent = PendingIntent.getActivity(context, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
 
-                Notification notification = new NotificationCompat.Builder(context)
-                        .setSmallIcon(R.drawable.ic_stat_notify)
-                        .setContentTitle(Preferences.getTitle(context))
-                        .setContentText(cursor.getString(NOTIFICATION_ENTRY_TITLE))
-                        .setContentIntent(pendingIntent)
-                        .setColor(ResourcesCompat.getColor(context.getResources(), R.color.branding_blue, null))
-                        .setAutoCancel(true)
-                        .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
-                        .build();
+                    Notification notification = new NotificationCompat.Builder(context)
+                            .setSmallIcon(R.drawable.ic_stat_notify)
+                            .setContentTitle(Preferences.getTitle(context))
+                            .setContentText(cursor.getString(NOTIFICATION_ENTRY_TITLE))
+                            .setContentIntent(pendingIntent)
+                            .setColor(ResourcesCompat.getColor(context.getResources(), R.color.branding_blue, null))
+                            .setAutoCancel(true)
+                            .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
+                            .build();
 
-                notificationManager.notify(R.id.notification, notification);
-            } else {
-                notificationManager.cancel(R.id.notification);
+                    notificationManager.notify(R.id.notification, notification);
+                } else {
+                    notificationManager.cancel(R.id.notification);
+                }
+
+                cursor.close();
             }
-
-            cursor.close();
         }
     }
 
